@@ -7,140 +7,99 @@
   <meta name="robots" content="noindex" />
   <style>
     :root { --bg:#f6f7f9; --card:#fff; --text:#111; --muted:#666; --line:#e6e8ee; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      margin: 0; padding: 16px; background: var(--bg); color: var(--text); }
-    header { max-width: 1020px; margin: 0 auto 14px auto; }
-    h1 { margin: 0 0 8px 0; font-size: 22px; }
-    .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px 0; line-height: 1.45; }
-    .toolbar { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 12px; }
-    input[type="search"]{ width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid var(--line);
-      outline: none; font-size: 15px; background: #fff; }
-    .counter { font-size: 13px; color: var(--muted); padding: 10px 12px; background: #fff;
-      border: 1px solid var(--line); border-radius: 12px; white-space: nowrap; }
-    .grid { max-width: 1020px; margin: 0 auto; display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-    a.card { display: block; text-decoration: none; color: inherit; background: var(--card);
-      border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06); transition: transform .05s ease, box-shadow .05s ease; }
-    a.card:active { transform: scale(0.99); box-shadow: 0 1px 2px rgba(0,0,0,.10); }
-    .thumb { width: 100%; aspect-ratio: 16 / 10; background: #f1f2f5; display: none; object-fit: cover; }
-    .content { padding: 12px; }
-    .title { font-weight: 800; letter-spacing: .3px; font-size: 16px; margin-bottom: 6px; }
-    .note { color: var(--muted); font-size: 13px; line-height: 1.35; min-height: 34px; white-space: pre-wrap; }
-    .tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { font-size: 12px; color: #334155; background: #eef2ff; padding: 4px 8px; border-radius: 999px; border: 1px solid #e0e7ff; }
-    .empty { max-width: 1020px; margin: 18px auto 0 auto; color: var(--muted); font-size: 14px;
-      padding: 12px 14px; background: #fff; border: 1px dashed var(--line); border-radius: 12px; display: none; }
-    footer { max-width: 1020px; margin: 18px auto 0 auto; color: var(--muted); font-size: 12px; text-align: center; }
-    code { background: #fff; padding: 2px 6px; border: 1px solid var(--line); border-radius: 8px; }
-    .links a{ color:#334155; text-decoration:none; border-bottom:1px dashed #cbd5e1; }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+      margin:0;padding:16px;background:var(--bg);color:var(--text); }
+    header{max-width:1020px;margin:0 auto 14px;}
+    h1{margin:0 0 8px;font-size:22px;}
+    .sub{color:var(--muted);font-size:13px;margin:0 0 14px;line-height:1.45;}
+    .toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:12px;}
+    input[type="search"]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);outline:none;font-size:15px;background:#fff;}
+    .counter{font-size:13px;color:var(--muted);padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:12px;white-space:nowrap;}
+    .grid{max-width:1020px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+    a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+      box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .05s ease,box-shadow .05s ease;}
+    a.card:active{transform:scale(0.99);box-shadow:0 1px 2px rgba(0,0,0,.10);}
+    .thumb{width:100%;aspect-ratio:16/10;background:#f1f2f5;display:none;object-fit:cover;}
+    .content{padding:12px;}
+    .title{font-weight:800;letter-spacing:.3px;font-size:16px;margin-bottom:6px;}
+    .note{color:var(--muted);font-size:13px;line-height:1.35;min-height:34px;white-space:pre-wrap;}
+    .tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+    .tag{font-size:12px;color:#334155;background:#eef2ff;padding:4px 8px;border-radius:999px;border:1px solid #e0e7ff;}
+    .empty{max-width:1020px;margin:18px auto 0;color:var(--muted);font-size:14px;padding:12px 14px;background:#fff;border:1px dashed var(--line);border-radius:12px;display:none;}
+    footer{max-width:1020px;margin:18px auto 0;color:var(--muted);font-size:12px;text-align:center;}
+    code{background:#fff;padding:2px 6px;border:1px solid var(--line);border-radius:8px;}
+    .links a{color:#334155;text-decoration:none;border-bottom:1px dashed #cbd5e1;}
   </style>
 </head>
 <body>
 <header>
   <h1>📦 Storage Boxes Index / 箱子总索引</h1>
   <p class="sub">
-    数据源：<code>boxes.json</code>。编辑：<span class="links"><a href="./admin.html">打开 Admin 编辑页</a></span>（表格方式）→ 下载 boxes.json → 上传覆盖并 commit。
+    GitHub 只存 <code>key</code>（不存 URL）。真实 URL 在 Cloudflare KV（私有）里。<br>
+    <span class="links"><a href="./admin.html">打开 Admin（编辑 key/备注/tags）</a></span>
   </p>
   <div class="toolbar">
     <input id="q" type="search" placeholder="搜索：BOX-23 / cables / 冬季 / kids …" autocomplete="off" />
     <div class="counter" id="counter">Loading…</div>
   </div>
 </header>
+
 <div class="grid" id="grid"></div>
 <div class="empty" id="empty">没有匹配结果。</div>
 <footer>GitHub Pages · zzpy20 · <span id="stamp"></span></footer>
 
 <script>
-  const grid = document.getElementById("grid");
-  const q = document.getElementById("q");
-  const counter = document.getElementById("counter");
-  const empty = document.getElementById("empty");
-  document.getElementById("stamp").textContent = new Date().toISOString().slice(0,10);
+  const grid=document.getElementById("grid"),q=document.getElementById("q"),counter=document.getElementById("counter"),empty=document.getElementById("empty");
+  document.getElementById("stamp").textContent=new Date().toISOString().slice(0,10);
 
-  function pad2(n){ return String(n).padStart(2, "0"); }
-  function normalize(s){ return (s || "").toString().trim().toLowerCase(); }
-  function coerceTags(tags){
-    if (Array.isArray(tags)) return tags.map(t => String(t).trim()).filter(Boolean);
-    if (typeof tags === "string") return tags.split(/[;,]/g).flatMap(p => p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
+  const pad2=n=>String(n).padStart(2,"0");
+  const normalize=s=>(s||"").toString().trim().toLowerCase();
+  const coerceTags=tags=>{
+    if(Array.isArray(tags)) return tags.map(t=>String(t).trim()).filter(Boolean);
+    if(typeof tags==="string") return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
     return [];
-  }
+  };
+
   function makeCard(box){
-    const a = document.createElement("a");
-    a.className = "card";
-    a.href = `box-${box.id}/`;
-
-    const img = document.createElement("img");
-    img.className = "thumb";
-    img.alt = `BOX-${box.id} preview`;
-    if (box.preview) { img.src = box.preview; img.style.display = "block"; img.onerror = () => img.style.display = "none"; }
-
-    const c = document.createElement("div");
-    c.className = "content";
-    const t = document.createElement("div");
-    t.className = "title"; t.textContent = `BOX-${box.id}`;
-    const note = document.createElement("div");
-    note.className = "note"; note.textContent = box.note || "";
-
-    const tagsWrap = document.createElement("div");
-    tagsWrap.className = "tags";
-    (box.tags || []).forEach(tag => {
-      const s = document.createElement("span");
-      s.className = "tag"; s.textContent = tag;
-      tagsWrap.appendChild(s);
-    });
-
-    c.appendChild(t); c.appendChild(note);
-    if ((box.tags || []).length) c.appendChild(tagsWrap);
-
+    const a=document.createElement("a"); a.className="card"; a.href=`box-${box.id}/`;
+    const img=document.createElement("img"); img.className="thumb"; img.alt=`BOX-${box.id} preview`;
+    if(box.preview){ img.src=box.preview; img.style.display="block"; img.onerror=()=>img.style.display="none"; }
+    const c=document.createElement("div"); c.className="content";
+    const t=document.createElement("div"); t.className="title"; t.textContent=`BOX-${box.id}`;
+    const note=document.createElement("div"); note.className="note"; note.textContent=box.note||"";
+    const tagsWrap=document.createElement("div"); tagsWrap.className="tags";
+    (box.tags||[]).forEach(tag=>{ const s=document.createElement("span"); s.className="tag"; s.textContent=tag; tagsWrap.appendChild(s); });
+    c.appendChild(t); c.appendChild(note); if((box.tags||[]).length) c.appendChild(tagsWrap);
     a.appendChild(img); a.appendChild(c);
-    a.dataset.search = [
-      `box-${box.id}`, `box${box.id}`, `box ${box.id}`, `box-${parseInt(box.id,10)}`,
-      box.note || "", (box.tags || []).join(" ")
-    ].join(" ").toLowerCase();
+    a.dataset.search=[`box-${box.id}`,`box${box.id}`,`box ${box.id}`,`box-${parseInt(box.id,10)}`,box.key||"",box.note||"", (box.tags||[]).join(" ")].join(" ").toLowerCase();
     return a;
   }
+
   function render(list){
-    grid.innerHTML = "";
-    list.forEach(b => grid.appendChild(makeCard(b)));
-    counter.textContent = `${list.length} boxes`;
-    empty.style.display = list.length ? "none" : "block";
+    grid.innerHTML=""; list.forEach(b=>grid.appendChild(makeCard(b)));
+    counter.textContent=`${list.length} boxes`; empty.style.display=list.length?"none":"block";
   }
+
   function applyFilter(){
-    const term = normalize(q.value);
-    const cards = Array.from(grid.querySelectorAll("a.card"));
-    if (!term) { cards.forEach(c => c.style.display = ""); counter.textContent = `${cards.length} boxes`; empty.style.display = "none"; return; }
-    let shown = 0;
-    for (const card of cards){
-      const ok = card.dataset.search.includes(term);
-      card.style.display = ok ? "" : "none";
-      if (ok) shown++;
-    }
-    counter.textContent = `${shown} / ${cards.length}`;
-    empty.style.display = shown ? "none" : "block";
+    const term=normalize(q.value);
+    const cards=[...grid.querySelectorAll("a.card")];
+    if(!term){ cards.forEach(c=>c.style.display=""); counter.textContent=`${cards.length} boxes`; empty.style.display="none"; return; }
+    let shown=0;
+    for(const card of cards){ const ok=card.dataset.search.includes(term); card.style.display=ok?"":"none"; if(ok) shown++; }
+    counter.textContent=`${shown} / ${cards.length}`; empty.style.display=shown?"none":"block";
   }
   q.addEventListener("input", applyFilter);
 
   async function loadBoxes(){
-    const res = await fetch("boxes.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("boxes.json not found");
-    const data = await res.json();
-    const boxes = Array.isArray(data.boxes) ? data.boxes : [];
-    return boxes.map(r => ({
-      id: pad2(parseInt(r.id,10)),
-      url: (r.url || "").trim(),
-      note: (r.note || ""),
-      tags: coerceTags(r.tags),
-      preview: (r.preview || "").trim()
-    })).sort((a,b) => parseInt(a.id,10) - parseInt(b.id,10));
+    const res=await fetch("boxes.json",{cache:"no-store"});
+    if(!res.ok) throw new Error("boxes.json not found");
+    const data=await res.json();
+    const boxes=Array.isArray(data.boxes)?data.boxes:[];
+    return boxes.map(r=>({ id:pad2(parseInt(r.id,10)), key:(r.key||"").trim(), note:(r.note||""), tags:coerceTags(r.tags), preview:(r.preview||"").trim() }))
+      .sort((a,b)=>parseInt(a.id,10)-parseInt(b.id,10));
   }
-  (async () => {
-    try { render(await loadBoxes()); }
-    catch (e) {
-      const fallback = []; for (let i=1;i<=50;i++) fallback.push({ id: pad2(i), note:"", tags:[], preview:"" });
-      render(fallback);
-    }
-  })();
+
+  (async()=>{ try{ render(await loadBoxes()); } catch(e){ const fb=[]; for(let i=1;i<=50;i++) fb.push({id:pad2(i),key:"",note:"",tags:[],preview:""}); render(fb);} })();
 </script>
 </body>
 </html>
