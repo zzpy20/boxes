@@ -1,5 +1,5 @@
 // redirect.js (KEY -> Cloudflare Worker -> KV -> URL)
-const WORKER_BASE = "https://REPLACE_ME.workers.dev/"; // TODO: replace, must end with '/'
+const WORKER_BASE = "https://box-redirect.ausz.workers.dev/"; // TODO: replace, must end with '/'
 
 function getBoxIdFromPath() {
   const m = location.pathname.match(/box-(\d{2})\/?$/i);
