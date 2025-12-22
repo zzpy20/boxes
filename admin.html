@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>🛠 Admin - Edit boxes.json</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <style>
+    :root { --bg:#f6f7f9; --card:#fff; --text:#111; --muted:#666; --line:#e6e8ee; --btn:#111; --btnText:#fff; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      margin: 0; padding: 16px; background: var(--bg); color: var(--text); }
+    header { max-width: 1180px; margin: 0 auto 12px auto; }
+    h1 { margin: 0 0 8px 0; font-size: 20px; }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 10px 0; }
+
+    .bar { max-width: 1180px; margin: 0 auto 10px auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .bar input[type="search"] { flex: 1; min-width: 220px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+    .btn { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 13px; }
+    .btn.primary { background: var(--btn); color: var(--btnText); border-color: var(--btn); }
+    .btn.danger { border-color:#fecaca; background:#fff5f5; color:#7f1d1d; }
+    .btn:active { transform: scale(0.99); }
+
+    .wrap { max-width: 1180px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px; vertical-align: top; }
+    th { background: #fafbfc; text-align: left; font-size: 12px; color: #334155; position: sticky; top: 0; z-index: 2; }
+    td { font-size: 13px; }
+    .id { width: 80px; font-weight: 800; white-space: nowrap; }
+    input[type="text"], textarea {
+      width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: #fff; font-size: 13px; outline: none;
+    }
+    textarea { min-height: 42px; resize: vertical; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+    .rowHidden { display: none; }
+    footer { max-width: 1180px; margin: 12px auto 0 auto; color: var(--muted); font-size: 12px; text-align: center; }
+    .pill { display:inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; background:#fff; font-size:12px; color:#475569; }
+    details { max-width:1180px; margin: 0 auto 10px auto; }
+    details > summary { cursor:pointer; color:#334155; font-size:13px; }
+    .bulkBox { background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; margin-top:10px; }
+    .bulkBox textarea { min-height:140px; }
+    .bulkRow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+    .small { font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛠 Admin：编辑 boxes.json（表格方式）</h1>
+  <p class="sub">
+    编辑完后点击 <b>Download boxes.json</b>，然后把下载的文件上传覆盖到 GitHub 仓库根目录并 commit。<br>
+    URL 必须以 <span class="pill">http://</span> 或 <span class="pill">https://</span> 开头。tags 用空格/逗号/分号分隔都行。preview 例如：<span class="pill">previews/box-01.jpg</span>
+  </p>
+</header>
+
+<div class="bar">
+  <input id="search" type="search" placeholder="搜索：01 / box-01 / 关键词 / tags ..." />
+  <button class="btn" id="loadRemote">Load current boxes.json</button>
+  <label class="btn" for="fileIn">Import boxes.json</label>
+  <input id="fileIn" type="file" accept="application/json" style="display:none" />
+  <button class="btn primary" id="download">Download boxes.json</button>
+  <button class="btn" id="validate">Validate URLs</button>
+</div>
+
+<details>
+  <summary>⚡ 批量粘贴 URL（一行一个）→ 自动填充 BOX-01..BOX-50（可选）</summary>
+  <div class="bulkBox">
+    <div class="small">
+      规则：每行一个 URL。空行会被忽略。你可以只粘贴前 N 行，则只更新前 N 个箱子。<br>
+      支持两种格式：<span class="pill">纯 URL</span> 或 <span class="pill">01,https://...</span>（带 id 的 CSV 两列）
+    </div>
+    <textarea id="bulkText" class="mono" placeholder="https://...
+https://...
+...
+或：
+01,https://...
+02,https://..."></textarea>
+    <div class="bulkRow">
+      <button class="btn primary" id="applyBulk">Apply to URL column</button>
+      <button class="btn" id="clearBulk">Clear</button>
+      <button class="btn danger" id="wipeUrls">Wipe all URLs</button>
+      <span class="small" id="bulkStatus"></span>
+    </div>
+  </div>
+</details>
+
+<div class="wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="id">ID</th>
+        <th>URL (redirect target)</th>
+        <th>Note / 备注</th>
+        <th>Tags</th>
+        <th>Preview path</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<footer>Tip: 下载 → 上传覆盖仓库根目录 boxes.json → commit → 刷新后生效</footer>
+
+<script>
+  const BOX_COUNT = 50;
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  function norm(s){ return (s||"").toString().trim().toLowerCase(); }
+
+  function splitTags(s){
+    const raw = (s || "").trim();
+    if (!raw) return [];
+    return raw.split(/[;,]/g).flatMap(part => part.split(/\s+/g)).map(t => t.trim()).filter(Boolean);
+  }
+  function joinTags(arr){
+    if (!Array.isArray(arr)) return "";
+    return arr.map(x => String(x).trim()).filter(Boolean).join(" ");
+  }
+  function makeEmptyBoxes(){
+    const boxes = [];
+    for (let i=1;i<=BOX_COUNT;i++){
+      boxes.push({ id: pad2(i), url:"", note:"", tags:[], preview:"" });
+    }
+    return boxes;
+  }
+
+  let state = { boxes: makeEmptyBoxes() };
+
+  function escapeHtml(s){
+    return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function render(){
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+    for (const b of state.boxes){
+      const tr = document.createElement("tr");
+      tr.dataset.search = [`box-${b.id}`, b.id, b.url || "", b.note || "", joinTags(b.tags), b.preview || ""].join(" ").toLowerCase();
+
+      tr.innerHTML = `
+        <td class="id">BOX-${b.id}</td>
+        <td><input class="mono" type="text" data-k="url" value="${escapeHtml(b.url||"")}" placeholder="https://..." /></td>
+        <td><textarea data-k="note" placeholder="例如：充电线/电源适配器...">${escapeHtml(b.note||"")}</textarea></td>
+        <td><input type="text" data-k="tags" value="${escapeHtml(joinTags(b.tags))}" placeholder="cables chargers kids ..." /></td>
+        <td><input class="mono" type="text" data-k="preview" value="${escapeHtml(b.preview||"")}" placeholder="previews/box-01.jpg" /></td>
+      `;
+
+      tr.querySelectorAll("[data-k]").forEach(el => {
+        el.addEventListener("input", () => {
+          const k = el.dataset.k;
+          if (k === "tags") b.tags = splitTags(el.value);
+          else b[k] = el.value;
+
+          tr.dataset.search = [`box-${b.id}`, b.id, b.url || "", b.note || "", joinTags(b.tags), b.preview || ""].join(" ").toLowerCase();
+        });
+      });
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  async function loadRemote(){
+    const res = await fetch("./boxes.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("boxes.json not found");
+    const data = await res.json();
+    const boxes = Array.isArray(data.boxes) ? data.boxes : [];
+
+    const map = new Map();
+    for (const r of boxes){
+      const id = pad2(parseInt(r.id,10));
+      map.set(id, {
+        id,
+        url: (r.url || "").toString(),
+        note: (r.note || "").toString(),
+        tags: Array.isArray(r.tags) ? r.tags : splitTags(r.tags || ""),
+        preview: (r.preview || "").toString()
+      });
+    }
+    const full = [];
+    for (let i=1;i<=BOX_COUNT;i++){
+      const id = pad2(i);
+      full.push(map.get(id) || { id, url:"", note:"", tags:[], preview:"" });
+    }
+    state.boxes = full;
+    render();
+    setStatus("Loaded current boxes.json ✅");
+  }
+
+  function downloadJson(){
+    const out = { boxes: state.boxes.map(b => ({
+      id: b.id,
+      url: (b.url || "").toString().trim(),
+      note: (b.note || "").toString(),
+      tags: Array.isArray(b.tags) ? b.tags : splitTags(b.tags || ""),
+      preview: (b.preview || "").toString().trim()
+    }))};
+
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "boxes.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }
+
+  function validateUrls(){
+    const bad = [];
+    for (const b of state.boxes){
+      const u = (b.url || "").trim();
+      if (!u) continue;
+      if (!/^https?:\/\//i.test(u)) bad.push(`BOX-${b.id}: ${u}`);
+    }
+    alert(bad.length ? ("Invalid URLs (must start with http/https):\n\n" + bad.join("\n")) : "All URLs look OK ✅");
+  }
+
+  // Search filter
+  document.getElementById("search").addEventListener("input", (e) => {
+    const term = norm(e.target.value);
+    document.querySelectorAll("#tbody tr").forEach(tr => {
+      tr.classList.toggle("rowHidden", term && !tr.dataset.search.includes(term));
+    });
+  });
+
+  // Import file
+  document.getElementById("fileIn").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+      const data = JSON.parse(text);
+      const boxes = Array.isArray(data.boxes) ? data.boxes : [];
+      const map = new Map();
+      for (const r of boxes){
+        const id = pad2(parseInt(r.id,10));
+        map.set(id, {
+          id,
+          url: (r.url || "").toString(),
+          note: (r.note || "").toString(),
+          tags: Array.isArray(r.tags) ? r.tags : splitTags(r.tags || ""),
+          preview: (r.preview || "").toString()
+        });
+      }
+      const full = [];
+      for (let i=1;i<=BOX_COUNT;i++){
+        const id = pad2(i);
+        full.push(map.get(id) || { id, url:"", note:"", tags:[], preview:"" });
+      }
+      state.boxes = full;
+      render();
+      setStatus("Imported boxes.json ✅");
+    } catch (err) {
+      alert("Invalid JSON file.");
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+  // Bulk paste
+  function setStatus(msg){
+    const el = document.getElementById("bulkStatus");
+    if (!el) return;
+    el.textContent = msg || "";
+  }
+
+  function parseBulkLines(text){
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    // detect "id,url" two-column
+    const pairs = [];
+    for (const line of lines){
+      const m = line.match(/^\s*(\d{1,2})\s*,\s*(https?:\/\/\S+)\s*$/i);
+      if (m){
+        pairs.push({ id: pad2(parseInt(m[1],10)), url: m[2].trim() });
+      } else {
+        pairs.push({ id: null, url: line });
+      }
+    }
+    return pairs;
+  }
+
+  function applyBulk(){
+    const text = document.getElementById("bulkText").value || "";
+    const items = parseBulkLines(text);
+    if (!items.length) { setStatus("No lines to apply."); return; }
+
+    let updated = 0;
+    let skipped = 0;
+
+    // If any line has explicit id, use mapping mode.
+    const hasId = items.some(x => x.id);
+    if (hasId){
+      const map = new Map();
+      for (const it of items){
+        if (it.id && it.url) map.set(it.id, it.url);
+      }
+      for (const b of state.boxes){
+        if (map.has(b.id)){
+          b.url = map.get(b.id);
+          updated++;
+        }
+      }
+      render();
+      setStatus(`Applied by ID ✅ Updated ${updated} boxes`);
+      return;
+    }
+
+    // Sequential mode: line1->BOX-01, line2->BOX-02 ...
+    for (let i=0; i<state.boxes.length && i<items.length; i++){
+      const u = (items[i].url || "").trim();
+      if (!u) { skipped++; continue; }
+      state.boxes[i].url = u;
+      updated++;
+    }
+    render();
+    setStatus(`Applied sequentially ✅ Updated ${updated} boxes (skipped ${skipped})`);
+  }
+
+  function clearBulk(){
+    document.getElementById("bulkText").value = "";
+    setStatus("");
+  }
+
+  function wipeUrls(){
+    if (!confirm("确定要清空所有 URL 吗？")) return;
+    for (const b of state.boxes) b.url = "";
+    render();
+    setStatus("All URLs cleared ✅");
+  }
+
+  document.getElementById("applyBulk").addEventListener("click", applyBulk);
+  document.getElementById("clearBulk").addEventListener("click", clearBulk);
+  document.getElementById("wipeUrls").addEventListener("click", wipeUrls);
+
+  // Buttons
+  document.getElementById("loadRemote").addEventListener("click", () => loadRemote().catch(err => alert(err.message)));
+  document.getElementById("download").addEventListener("click", downloadJson);
+  document.getElementById("validate").addEventListener("click", validateUrls);
+
+  render();
+</script>
+
+</body>
+</html>
