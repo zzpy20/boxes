@@ -3,13 +3,16 @@
     {
       "id": "01",
       "key": "box001",
-      "note": "",
-      "tags": []
+      "note": "Camping",
+      "tags": [
+        "caming",
+        "clothes"
+      ]
     },
     {
       "id": "02",
       "key": "box002",
-      "note": "",
+      "note": "flatable boat",
       "tags": []
     },
     {
