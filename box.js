@@ -104,7 +104,8 @@ function ensureModal() {
   overlay.addEventListener("click", (e) => { if (e.target === overlay) hideModal(); });
   document.getElementById("authClose").addEventListener("click", hideModal);
 }
-function showModal({ onSubmit } = {}) {
+function showModal({
+        onClose: () => { location.href = "/boxes/"; }, onSubmit } = {}) {
   ensureModal();
   const overlay = document.getElementById("authOverlay");
   const input = document.getElementById("authInput");
@@ -142,10 +143,6 @@ let BOX_ID = null;
 let KV_KEY = null;
 let TOKEN = null;
 
-let VIEW_MODE = (localStorage.getItem('boxes_view_mode') || 'list');
-let SELECTED = new Set();
-let FILES = [];
-
 function $(id){ return document.getElementById(id); }
 function setStatus(text){ const el=$("status"); if(el) el.textContent=text; }
 function fmtBytes(bytes){
@@ -156,309 +153,13 @@ function fmtBytes(bytes){
   return `${n.toFixed(i===0?0:1)} ${u[i]}`;
 }
 
-function extOf(name){
-  const s=String(name||"");
-  const i=s.lastIndexOf(".");
-  return (i>=0?s.slice(i+1):"").toLowerCase();
-}
-function supportsThumb(ext){ return ["jpg","jpeg","png","gif","webp","avif"].includes(ext); } // keep light
-function setViewMode(mode){
-  VIEW_MODE = (mode==="grid") ? "grid" : "list";
-  localStorage.setItem("boxes_view_mode", VIEW_MODE);
-  updateViewButtons();
-  renderFiles();
-}
-function updateViewButtons(){
-  const b1=document.getElementById("btnList");
-  const b2=document.getElementById("btnGrid");
-  if(b1) b1.classList.toggle("on", VIEW_MODE==="list");
-  if(b2) b2.classList.toggle("on", VIEW_MODE==="grid");
-  const host = $("files");
-  if(host){
-    host.classList.toggle("grid", VIEW_MODE==="grid");
-    host.classList.toggle("list", VIEW_MODE!=="grid");
-  }
-}
-function toggleSelected(name){
-  if(SELECTED.has(name)) SELECTED.delete(name);
-  else SELECTED.add(name);
-  updateBulkBar();
-}
-function clearSelected(){ SELECTED.clear(); updateBulkBar(); renderFiles(); }
-function selectAll(){ FILES.forEach(f=>SELECTED.add(f.name)); updateBulkBar(); renderFiles(); }
-function updateBulkBar(){
-  const el=document.getElementById("bulkCount");
-  const del=document.getElementById("btnBulkDelete");
-  const clr=document.getElementById("btnClearSel");
-  if(el) el.textContent = `${SELECTED.size} selected`;
-  if(del) del.disabled = SELECTED.size===0;
-  if(clr) clr.disabled = SELECTED.size===0;
-}
-async function bulkDelete(){
-  if(SELECTED.size===0) return;
-  if(!confirm(`Delete ${SELECTED.size} file(s) in BOX-${BOX_ID}?`)) return;
-  const names=[...SELECTED];
-  setStatus(`Deleting ${names.length}…`);
-  for(const n of names){
-    try{ await fetch(mediaDeleteOneUrl(BOX_ID, n, TOKEN), { method:"DELETE" }); }catch(e){ console.warn(e); }
-  }
-  clearSelected();
-  await refreshList();
-  setStatus("Done.");
-}
-function wireViewAndBulk(){
-  const host=document.getElementById("viewToolbar");
-  if(host && !host.dataset.wired){
-    host.dataset.wired="1";
-    host.innerHTML = `
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btnList" type="button">List</button>
-        <button class="btn" id="btnGrid" type="button">Grid</button>
-        <span class="sep"></span>
-        <button class="btn" id="btnSelectAll" type="button">Select all</button>
-        <button class="btn" id="btnClearSel" type="button" disabled>Clear</button>
-        <button class="btn danger" id="btnBulkDelete" type="button" disabled>Delete selected</button>
-        <span class="muted" id="bulkCount">0 selected</span>
-      </div>
-    `;
-  }
-  document.getElementById("btnList")?.addEventListener("click", ()=>setViewMode("list"));
-  document.getElementById("btnGrid")?.addEventListener("click", ()=>setViewMode("grid"));
-  document.getElementById("btnSelectAll")?.addEventListener("click", ()=>selectAll());
-  document.getElementById("btnClearSel")?.addEventListener("click", ()=>clearSelected());
-  document.getElementById("btnBulkDelete")?.addEventListener("click", ()=>bulkDelete().catch(console.warn));
-  updateViewButtons();
-  updateBulkBar();
-}
-
 async function checkToken(kvKey, token){
   const res = await fetch(workerCheckUrl(kvKey, token), { method:"GET", cache:"no-store" });
   return res.status === 200;
 }
 
 // ---------- media UI ----------
-function openPreview(name, fileUrl){
-  // reuse existing preview renderer by simulating click; we will call existing logic in row builder below
-  // This function is kept for future expansion.
-}
-
-function renderFiles(){
-  const host = $("files");
-  if(!host) return;
-  host.innerHTML = "";
-  $("empty").style.display = (FILES.length===0) ? "block" : "none";
-
-  if(VIEW_MODE==="grid"){
-    host.classList.add("grid"); host.classList.remove("list");
-  }else{
-    host.classList.add("list"); host.classList.remove("grid");
-  }
-
-  for(const it of FILES){
-    const name = it.name || "";
-    const size = fmtBytes(it.size);
-    const lm = it.lastModified ? new Date(it.lastModified).toLocaleString() : "";
-    const ext = extOf(name);
-    const isImg = ["jpg","jpeg","png","gif","webp","heic","avif"].includes(ext);
-    const isHeic = (ext==="heic");
-    const isVid = ["mp4","mov","m4v","webm"].includes(ext);
-    const isAud = ["mp3","m4a","aac","wav","flac","ogg"].includes(ext);
-    const isPdf = (ext==="pdf");
-
-    const fileUrl = mediaFileUrl(BOX_ID, name, TOKEN);
-
-    if(VIEW_MODE==="grid"){
-      const card=document.createElement("div");
-      card.className="gridItem";
-
-      const top=document.createElement("div");
-      top.className="gridTop";
-
-      const chk=document.createElement("input");
-      chk.type="checkbox";
-      chk.checked = SELECTED.has(name);
-      chk.addEventListener("change", ()=>toggleSelected(name));
-      top.appendChild(chk);
-
-      const meta=document.createElement("div");
-      meta.className="gridMeta";
-      meta.textContent = `${size}${lm ? " · " + lm : ""}`;
-      top.appendChild(meta);
-
-      const thumb=document.createElement("div");
-      thumb.className="thumb";
-      if(supportsThumb(ext)){
-        const img=new Image();
-        img.loading="lazy";
-        img.src=fileUrl;
-        img.alt=name;
-        thumb.appendChild(img);
-      }else if(isPdf){
-        thumb.textContent="PDF";
-      }else{
-        thumb.textContent=ext ? ext.toUpperCase() : "FILE";
-      }
-
-      const title=document.createElement("div");
-      title.className="gridTitle";
-      title.textContent=name;
-
-      const actions=document.createElement("div");
-      actions.className="fileBtns";
-      actions.innerHTML = `
-        <a class="btn" href="${fileUrl}" target="_blank" rel="noreferrer">打开/下载</a>
-        <button class="btn" data-act="preview">预览</button>
-        <button class="btn danger" data-act="del">删除</button>
-      `;
-
-      actions.querySelector('[data-act="preview"]').onclick = () => {
-        // Use the same preview logic as list below
-        const host = $("preview");
-        host.innerHTML = "";
-        const title = document.createElement("div");
-        title.className = "previewTitle";
-        title.textContent = `预览：${name}`;
-        host.appendChild(title);
-
-        if(isImg){
-          if(isHeic){
-            const p=document.createElement("div");
-            p.className="previewHint";
-            p.textContent="HEIC 在部分浏览器（Chrome/Edge）不支持直接预览。请点“打开/下载”，或用 Safari 查看。";
-            host.appendChild(p);
-            const a=document.createElement("a");
-            a.href=fileUrl; a.target="_blank"; a.rel="noreferrer"; a.className="btn";
-            a.textContent="打开/下载 HEIC";
-            host.appendChild(a);
-          } else {
-            const img=document.createElement("img");
-            img.src=fileUrl; img.alt=name; img.className="previewImg";
-            host.appendChild(img);
-          }
-        } else if(isVid){
-          const v=document.createElement("video");
-          v.controls=true; v.playsInline=true; v.className="previewMedia";
-          const s=document.createElement("source");
-          s.src=fileUrl; v.appendChild(s); host.appendChild(v);
-        } else if(isAud){
-          const a=document.createElement("audio");
-          a.controls=true; a.className="previewMedia";
-          const s=document.createElement("source");
-          s.src=fileUrl; a.appendChild(s); host.appendChild(a);
-        } else if(isPdf){
-          const iframe=document.createElement("iframe");
-          iframe.src=fileUrl; iframe.className="previewFrame";
-          host.appendChild(iframe);
-        } else {
-          const p=document.createElement("div");
-          p.className="previewHint";
-          p.textContent="该文件类型不支持内嵌预览，请点击“打开/下载”。";
-          host.appendChild(p);
-        }
-        host.scrollIntoView({behavior:"smooth", block:"start"});
-      };
-
-      actions.querySelector('[data-act="del"]').onclick = async () => {
-        if(!confirm(`确定删除：${name} ？`)) return;
-        setStatus("Deleting…");
-        const resp = await fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method:"DELETE" });
-        if(resp.status===401){ throw new Error("unauthorized"); }
-        if(!resp.ok){ alert("删除失败"); }
-        await refreshList();
-      };
-
-      card.appendChild(top);
-      card.appendChild(thumb);
-      card.appendChild(title);
-      card.appendChild(actions);
-      $("files").appendChild(card);
-    } else {
-      const row=document.createElement("div");
-      row.className="fileRow";
-
-      row.innerHTML = `
-        <div class="fileMain">
-          <div class="fileLeft">
-            <input type="checkbox" class="sel" ${SELECTED.has(name) ? "checked":""}/>
-            <div class="fileInfo">
-              <div class="fileName">${name}</div>
-              <div class="fileMeta">${size}${lm ? " · " + lm : ""}</div>
-            </div>
-          </div>
-        </div>
-        <div class="fileBtns">
-          <a class="btn" href="${fileUrl}" target="_blank" rel="noreferrer">打开/下载</a>
-          <button class="btn" data-act="preview">预览</button>
-          <button class="btn danger" data-act="del">删除</button>
-        </div>
-      `;
-
-      row.querySelector("input.sel").addEventListener("change", ()=>toggleSelected(name));
-
-      row.querySelector('[data-act="preview"]').onclick = () => {
-        const host = $("preview");
-        host.innerHTML = "";
-        const title = document.createElement("div");
-        title.className = "previewTitle";
-        title.textContent = `预览：${name}`;
-        host.appendChild(title);
-
-        if(isImg){
-          if(isHeic){
-            const p=document.createElement("div");
-            p.className="previewHint";
-            p.textContent="HEIC 在部分浏览器（Chrome/Edge）不支持直接预览。请点“打开/下载”，或用 Safari 查看。";
-            host.appendChild(p);
-            const a=document.createElement("a");
-            a.href=fileUrl; a.target="_blank"; a.rel="noreferrer"; a.className="btn";
-            a.textContent="打开/下载 HEIC";
-            host.appendChild(a);
-          } else {
-            const img=document.createElement("img");
-            img.src=fileUrl; img.alt=name; img.className="previewImg";
-            host.appendChild(img);
-          }
-        } else if(isVid){
-          const v=document.createElement("video");
-          v.controls=true; v.playsInline=true; v.className="previewMedia";
-          const s=document.createElement("source");
-          s.src=fileUrl; v.appendChild(s); host.appendChild(v);
-        } else if(isAud){
-          const a=document.createElement("audio");
-          a.controls=true; a.className="previewMedia";
-          const s=document.createElement("source");
-          s.src=fileUrl; a.appendChild(s); host.appendChild(a);
-        } else if(isPdf){
-          const iframe=document.createElement("iframe");
-          iframe.src=fileUrl; iframe.className="previewFrame";
-          host.appendChild(iframe);
-        } else {
-          const p=document.createElement("div");
-          p.className="previewHint";
-          p.textContent="该文件类型不支持内嵌预览，请点击“打开/下载”。";
-          host.appendChild(p);
-        }
-        host.scrollIntoView({behavior:"smooth", block:"start"});
-      };
-
-      row.querySelector('[data-act="del"]').onclick = async () => {
-        if(!confirm(`确定删除：${name} ？`)) return;
-        setStatus("Deleting…");
-        const resp = await fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method:"DELETE" });
-        if(resp.status===401){ throw new Error("unauthorized"); }
-        if(!resp.ok){ alert("删除失败"); }
-        await refreshList();
-      };
-
-      $("files").appendChild(row);
-    }
-  }
-
-  updateBulkBar();
-}
-
 async function refreshList(){
-
   $("files").innerHTML = "";
   $("empty").style.display = "none";
   setStatus("Loading files…");
@@ -473,10 +174,6 @@ async function refreshList(){
   }
   setStatus(`Loaded ${arr.length} files.`);
   arr.sort((a,b)=> (a.name||"").localeCompare(b.name||""));
-  FILES = arr;
-  renderFiles();
-  return;
-
   for(const it of arr){
     const row = document.createElement("div");
     row.className = "fileRow";
@@ -796,7 +493,12 @@ function handleErr(e){
     });
   }
 
-  if(!TOKEN){ setStatus("未登录"); return; }
+  if(!TOKEN){
+    setStatus("未登录");
+    // Hard block: if user closed modal or did not authenticate, bounce to index.
+    location.href = "/boxes/";
+    return;
+  }
 
   $("authPill").textContent = "Auth: ✅ 已登录（本机记住）";
   await refreshList();
