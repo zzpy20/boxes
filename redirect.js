@@ -11,7 +11,7 @@
 //
 // Configure:
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/"; // TODO: replace, MUST end with '/'
-const TOKEN_STORAGE_KEY = "boxes_auth_token";
+const TOKEN_STORAGE_KEY = "BOX_AUTH_TOKEN";
 const TOKEN_PARAM = "t";
 
 // ---------- helpers ----------
