@@ -3,22 +3,25 @@
     {
       "id": "01",
       "key": "box001",
-      "note": "camping",
+      "note": "camping, 露营",
       "tags": [
         "camping",
-        "clothes"
+        "clothes，",
+        "露营"
       ]
     },
     {
       "id": "02",
       "key": "box002",
       "note": "flatable boat",
-      "tags": []
+      "tags": [
+        "书"
+      ]
     },
     {
       "id": "03",
       "key": "box003",
-      "note": "",
+      "note": "books",
       "tags": []
     },
     {
