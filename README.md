@@ -1,35 +1,31 @@
-# boxes (Public GitHub Pages) + Cloudflare KV (Private URLs)
+# boxes: Auth modal + remember login + Worker rate limit (Public GitHub Pages, Private URLs)
 
-## What changes vs your old version
-- GitHub (public) stores ONLY keys, notes, tags, preview
-- Real URLs never appear in GitHub
-- Cloudflare KV (private) stores: key -> URL
-- QR scans go: /box-XX/ -> redirect.js -> Worker/<key> -> 302 -> real URL
+## What you get
+- Nice auth modal on box pages (no browser prompt)
+- Remember login on device (localStorage)
+- Logout button on index page
+- Worker validates token (secret) before redirect
+- Worker rate limits requests (basic anti-bruteforce)
 
-## Step A: Cloudflare (once)
-1) Create a Worker (e.g. box-redirect)
-2) Create a KV namespace (e.g. BOX_KV)
-3) Bind KV to Worker with variable name: BOX_KV
-4) Paste `cloudflare_worker.js` into the Worker, deploy
-5) Add KV entries:
-   - kitchen_docs -> https://docs.google.com/...
-   - winter_clothes -> https://notion.so/...
-   (Only you can read/modify KV)
+## Cloudflare Worker setup
+1) Bind KV namespace as: BOX_KV
+2) Add Worker Secret:
+   - Name: BOX_AUTH_TOKEN
+   - Value: your passphrase/token (long random recommended)
+3) Paste `cloudflare_worker.js` into your Worker and deploy
 
-## Step B: GitHub (repo)
-1) Upload EVERYTHING in this zip to your `boxes` repo root and commit (overwrite existing files).
-2) Edit `redirect.js`:
+## GitHub repo setup
+1) Upload everything in this bundle to your repo root and commit (overwrite)
+2) Edit `redirect.js` and set:
    const WORKER_BASE = "https://<your-worker-domain>/";
-   Must end with '/'
+   MUST end with '/'
 
-## Step C: Edit keys / notes
-Open:
-- https://zzpy20.github.io/boxes/admin.html
-Workflow:
-- Load current boxes.json
-- Edit key/note/tags
-- Download boxes.json
-- Upload & overwrite boxes.json in repo root and commit
+## How it works
+- When opening /box-XX/:
+  - redirect.js checks token in localStorage
+  - calls Worker ?check=1 with CORS JSON
+  - if ok -> redirects via Worker to real URL
+  - if not -> shows modal, saves token after success
 
-## Optional hardening
-- Remove the admin link from index.html if you don't want it discoverable.
+## Reset / logout
+- Open https://zzpy20.github.io/boxes/ and click "退出/清除本机授权"

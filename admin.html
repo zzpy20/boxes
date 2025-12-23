@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>🛠 Admin - keys only</title>
+  <title>🛠 Admin - key/note/tags</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
   <style>
@@ -26,46 +26,21 @@
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:12px;}
     .rowHidden{display:none;}
     footer{max-width:1180px;margin:12px auto 0;color:var(--muted);font-size:12px;text-align:center;}
-    details{max-width:1180px;margin:0 auto 10px;}
-    details>summary{cursor:pointer;color:#334155;font-size:13px;}
-    .bulkBox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;}
-    .bulkBox textarea{min-height:120px;}
-    .bulkRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
-    .small{font-size:12px;color:var(--muted);}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px;color:#475569;}
   </style>
 </head>
 <body>
 <header>
-  <h1>🛠 Admin：只编辑 key / 备注 / tags（URL 私有在 Cloudflare KV）</h1>
-  <p class="sub">
-    这里不存 URL。<b>key</b> 必须与你 Cloudflare KV 的键一致（例如 <span class="pill">kitchen_docs</span>）。<br>
-    编辑完：<b>Download boxes.json</b> → 上传覆盖 GitHub 仓库根目录并 commit。
-  </p>
+  <h1>🛠 Admin：编辑 key / 备注 / tags（URL 在 Cloudflare KV 私有管理）</h1>
+  <p class="sub">编辑完点击 <b>Download boxes.json</b> → 上传覆盖 GitHub 仓库根目录并 commit。</p>
 </header>
 
 <div class="bar">
-  <input id="search" type="search" placeholder="搜索：01 / key / 关键词 / tags ..." />
+  <input id="search" type="search" placeholder="搜索：01 / box-01 / key / 关键词 / tags ..." />
   <button class="btn" id="loadRemote">Load current boxes.json</button>
   <label class="btn" for="fileIn">Import boxes.json</label>
   <input id="fileIn" type="file" accept="application/json" style="display:none" />
   <button class="btn primary" id="download">Download boxes.json</button>
 </div>
-
-<details>
-  <summary>⚡ 批量粘贴 KEY（一行一个）→ 自动填充 BOX-01..BOX-50</summary>
-  <div class="bulkBox">
-    <div class="small">
-      支持两种格式：<span class="pill">kitchen_docs</span>（按顺序） 或 <span class="pill">01,kitchen_docs</span>（按 ID）
-    </div>
-    <textarea id="bulkText" class="mono" placeholder="kitchen_docs\nwinter_clothes\n...\n或：\n01,kitchen_docs\n02,winter_clothes"></textarea>
-    <div class="bulkRow">
-      <button class="btn primary" id="applyBulk">Apply to KEY column</button>
-      <button class="btn" id="clearBulk">Clear</button>
-      <span class="small" id="bulkStatus"></span>
-    </div>
-  </div>
-</details>
 
 <div class="wrap">
   <table>
@@ -74,49 +49,46 @@
         <th class="id">ID</th>
         <th>KEY (KV key)</th>
         <th>Note / 备注</th>
-        <th>Tags</th>
-        <th>Preview path</th>
+        <th>Tags（空格分隔）</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
-
 <footer>真实 URL 不在 GitHub；在 Cloudflare KV：key → URL（私有）</footer>
 
 <script>
-  const BOX_COUNT = 50;
+  const BOX_COUNT=50;
   const pad2=n=>String(n).padStart(2,"0");
   const norm=s=>(s||"").toString().trim().toLowerCase();
   const splitTags=s=>{
     const raw=(s||"").trim(); if(!raw) return [];
-    return raw.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
+    return raw.split(/\s+/g).map(t=>t.trim()).filter(Boolean);
   };
   const joinTags=arr=>Array.isArray(arr)?arr.map(x=>String(x).trim()).filter(Boolean).join(" "):"";
 
-  function makeEmpty(){ const out=[]; for(let i=1;i<=BOX_COUNT;i++) out.push({id:pad2(i),key:"",note:"",tags:[],preview:""}); return out; }
-  let state={ boxes: makeEmpty() };
+  let boxes=Array.from({length:BOX_COUNT},(_,i)=>({id:pad2(i+1),key:"",note:"",tags:[]}));
 
   function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
   function render(){
-    const tbody=document.getElementById("tbody"); tbody.innerHTML="";
-    for(const b of state.boxes){
+    const tbody=document.getElementById("tbody");
+    tbody.innerHTML="";
+    for(const b of boxes){
       const tr=document.createElement("tr");
-      tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags),b.preview||""].join(" ").toLowerCase();
+      tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags)].join(" ").toLowerCase();
       tr.innerHTML = `
         <td class="id">BOX-${b.id}</td>
         <td><input class="mono" type="text" data-k="key" value="${escapeHtml(b.key||"")}" placeholder="kitchen_docs" /></td>
         <td><textarea data-k="note" placeholder="例如：充电线/电源适配器...">${escapeHtml(b.note||"")}</textarea></td>
         <td><input type="text" data-k="tags" value="${escapeHtml(joinTags(b.tags))}" placeholder="cables chargers kids ..." /></td>
-        <td><input class="mono" type="text" data-k="preview" value="${escapeHtml(b.preview||"")}" placeholder="previews/box-01.jpg" /></td>
       `;
       tr.querySelectorAll("[data-k]").forEach(el=>{
         el.addEventListener("input",()=>{
           const k=el.dataset.k;
           if(k==="tags") b.tags=splitTags(el.value);
           else b[k]=el.value;
-          tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags),b.preview||""].join(" ").toLowerCase();
+          tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags)].join(" ").toLowerCase();
         });
       });
       tbody.appendChild(tr);
@@ -127,18 +99,19 @@
     const res=await fetch("./boxes.json",{cache:"no-store"});
     if(!res.ok) throw new Error("boxes.json not found");
     const data=await res.json();
-    const boxes=Array.isArray(data.boxes)?data.boxes:[];
+    const arr=Array.isArray(data.boxes)?data.boxes:[];
     const map=new Map();
-    for(const r of boxes){
+    for(const r of arr){
       const id=pad2(parseInt(r.id,10));
-      map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||""), preview:(r.preview||"").toString() });
+      map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||"") });
     }
-    const full=[]; for(let i=1;i<=BOX_COUNT;i++){ const id=pad2(i); full.push(map.get(id) || {id,key:"",note:"",tags:[],preview:""}); }
-    state.boxes=full; render(); setStatus("Loaded ✅");
+    boxes=Array.from({length:BOX_COUNT},(_,i)=> map.get(pad2(i+1)) || {id:pad2(i+1),key:"",note:"",tags:[]});
+    render();
+    alert("Loaded current boxes.json ✅");
   }
 
   function downloadJson(){
-    const out={ boxes: state.boxes.map(b=>({ id:b.id, key:(b.key||"").toString().trim(), note:(b.note||"").toString(), tags:Array.isArray(b.tags)?b.tags:splitTags(b.tags||""), preview:(b.preview||"").toString().trim() })) };
+    const out={ boxes: boxes.map(b=>({ id:b.id, key:(b.key||"").toString().trim(), note:(b.note||"").toString(), tags:Array.isArray(b.tags)?b.tags:splitTags(b.tags||"") })) };
     const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json;charset=utf-8"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="boxes.json";
     document.body.appendChild(a); a.click(); a.remove();
@@ -155,49 +128,21 @@
     const text=await file.text();
     try{
       const data=JSON.parse(text);
-      const boxes=Array.isArray(data.boxes)?data.boxes:[];
+      const arr=Array.isArray(data.boxes)?data.boxes:[];
       const map=new Map();
-      for(const r of boxes){
+      for(const r of arr){
         const id=pad2(parseInt(r.id,10));
-        map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||""), preview:(r.preview||"").toString() });
+        map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||"") });
       }
-      const full=[]; for(let i=1;i<=BOX_COUNT;i++){ const id=pad2(i); full.push(map.get(id) || {id,key:"",note:"",tags:[],preview:""}); }
-      state.boxes=full; render(); setStatus("Imported ✅");
-    } catch(err){ alert("Invalid JSON."); }
-    finally{ e.target.value=""; }
+      boxes=Array.from({length:BOX_COUNT},(_,i)=> map.get(pad2(i+1)) || {id:pad2(i+1),key:"",note:"",tags:[]});
+      render();
+      alert("Imported boxes.json ✅");
+    } catch(err){
+      alert("Invalid JSON.");
+    } finally {
+      e.target.value="";
+    }
   });
-
-  // Bulk keys
-  function setStatus(msg){ const el=document.getElementById("bulkStatus"); if(el) el.textContent=msg||""; }
-  function parseBulk(text){
-    const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-    const items=[];
-    for(const line of lines){
-      const m=line.match(/^\s*(\d{1,2})\s*,\s*([a-zA-Z0-9_\-\.]+)\s*$/);
-      if(m) items.push({id:pad2(parseInt(m[1],10)), key:m[2].trim()});
-      else items.push({id:null, key:line});
-    }
-    return items;
-  }
-  function applyBulk(){
-    const items=parseBulk(document.getElementById("bulkText").value||"");
-    if(!items.length){ setStatus("No lines."); return; }
-    const hasId=items.some(x=>x.id);
-    let updated=0;
-    if(hasId){
-      const map=new Map(); for(const it of items){ if(it.id && it.key) map.set(it.id,it.key); }
-      for(const b of state.boxes){ if(map.has(b.id)){ b.key=map.get(b.id); updated++; } }
-      render(); setStatus(`Applied by ID ✅ ${updated}`);
-      return;
-    }
-    for(let i=0;i<state.boxes.length && i<items.length;i++){
-      const k=(items[i].key||"").trim(); if(!k) continue;
-      state.boxes[i].key=k; updated++;
-    }
-    render(); setStatus(`Applied sequentially ✅ ${updated}`);
-  }
-  document.getElementById("applyBulk").addEventListener("click", applyBulk);
-  document.getElementById("clearBulk").addEventListener("click", ()=>{ document.getElementById("bulkText").value=""; setStatus(""); });
 
   document.getElementById("loadRemote").addEventListener("click", ()=>loadRemote().catch(err=>alert(err.message)));
   document.getElementById("download").addEventListener("click", downloadJson);
