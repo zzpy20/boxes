@@ -22,6 +22,8 @@
     a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
       box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .05s ease,box-shadow .05s ease;}
     a.card:active{transform:scale(0.99);box-shadow:0 1px 2px rgba(0,0,0,.10);}
+    .cover{height:120px;background:#f1f5f9;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;overflow:hidden}
+    .cover img{width:100%;height:100%;object-fit:cover;display:block}
     .content{padding:12px;}
     .title{font-weight:800;letter-spacing:.3px;font-size:16px;margin-bottom:6px;}
     .note{color:var(--muted);font-size:13px;line-height:1.35;min-height:34px;white-space:pre-wrap;}
@@ -77,6 +79,75 @@
 
   const pad2=n=>String(n).padStart(2,"0");
   const normalize=s=>(s||"").toString().trim().toLowerCase();
+
+  const WORKER_BASE = "https://box-redirect.ausz.workers.dev/"; // must end with '/'
+  function baseUrl(){ return WORKER_BASE.endsWith("/") ? WORKER_BASE : (WORKER_BASE + "/"); }
+  function mediaListUrl(boxId, token){
+    const u = new URL(baseUrl() + `media/box-${boxId}/list`);
+    u.searchParams.set("t", token);
+    return u.toString();
+  }
+  function mediaFileUrl(boxId, filename, token){
+    const u = new URL(baseUrl() + `media/box-${boxId}/${encodeURIComponent(filename)}`);
+    u.searchParams.set("t", token);
+    return u.toString();
+  }
+  function isImage(name){
+    const ext = (name||"").split(".").pop().toLowerCase();
+    return ["jpg","jpeg","png","gif","webp","heic","avif"].includes(ext);
+  }
+
+  async function loadCoverForCard(card, token){
+    const boxId = card.dataset.boxid;
+    const cover = card.querySelector(".cover");
+    if(!boxId || !cover || cover.dataset.loaded) return;
+    cover.dataset.loaded = "1";
+    try{
+      const res = await fetch(mediaListUrl(boxId, token), { cache:"no-store" });
+      if(!res.ok) { cover.textContent="无封面"; return; }
+      const arr = await res.json();
+      const first = (Array.isArray(arr) ? arr : []).map(x=>x.name).find(isImage);
+      if(!first){ cover.textContent="无封面"; return; }
+      const img = new Image();
+      img.loading = "lazy";
+      img.src = mediaFileUrl(boxId, first, token);
+      img.alt = `BOX-${boxId} cover`;
+      cover.textContent = "";
+      cover.appendChild(img);
+    }catch(e){
+      cover.textContent="封面加载失败";
+    }
+  }
+
+  function setupCoverLazyLoader(){
+    const token = getTok();
+    if(!token) return;
+    const cards = [...document.querySelectorAll("a.card")];
+    const queue = [];
+    let running = 0;
+    const MAX = 4;
+
+    const pump = ()=>{
+      while(running < MAX && queue.length){
+        const card = queue.shift();
+        running++;
+        loadCoverForCard(card, token).finally(()=>{ running--; pump(); });
+      }
+    };
+
+    const io = new IntersectionObserver((entries)=>{
+      for(const en of entries){
+        if(en.isIntersecting){
+          io.unobserve(en.target);
+          queue.push(en.target);
+        }
+      }
+      pump();
+    }, { rootMargin: "200px" });
+
+    cards.forEach(c=>io.observe(c));
+  }
+
   const coerceTags=tags=>{
     if(Array.isArray(tags)) return tags.map(t=>String(t).trim()).filter(Boolean);
     if(typeof tags==="string") return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
@@ -120,6 +191,11 @@
     const a=document.createElement("a");
     a.className="card";
     a.href=`box-${box.id}/`;
+    a.dataset.boxid = box.id;
+
+    const cover=document.createElement("div");
+    cover.className="cover";
+    cover.textContent="封面（需已登录）";
 
     const c=document.createElement("div");
     c.className="content";
@@ -151,6 +227,7 @@
     c.appendChild(t);
     c.appendChild(note);
     if((box.tags||[]).length) c.appendChild(tagsWrap);
+    a.appendChild(cover);
     a.appendChild(c);
 
     a.dataset.search=[`box-${box.id}`,box.id,box.key||"",box.note||"", (box.tags||[]).join(" ")].join(" ").toLowerCase();
@@ -173,11 +250,11 @@
   }
 
   (async()=>{
-    try{ render(await loadBoxes()); }
+    try{ render(await loadBoxes()); setupCoverLazyLoader(); }
     catch(e){
       const fb=[];
       for(let i=1;i<=50;i++) fb.push({id:pad2(i),key:"",note:"",tags:[]});
-      render(fb);
+      render(fb); setupCoverLazyLoader();
     }
   })();
 </script>

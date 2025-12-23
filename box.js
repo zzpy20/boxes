@@ -178,6 +178,7 @@ async function refreshList(){
     row.className = "fileRow";
     const name = it.name || "";
     const size = fmtBytes(it.size);
+    const lm = it.lastModified ? new Date(it.lastModified).toLocaleString() : "";
     const ext = name.split(".").pop().toLowerCase();
     const isImg = ["jpg","jpeg","png","gif","webp","heic","avif"].includes(ext);
     const isVid = ["mp4","mov","m4v","webm"].includes(ext);
@@ -189,7 +190,7 @@ async function refreshList(){
     row.innerHTML = `
       <div class="fileMain">
         <div class="fileName">${name}</div>
-        <div class="fileMeta">${size}</div>
+        <div class="fileMeta">${size}${lm ? " · " + lm : ""}</div>
       </div>
       <div class="fileBtns">
         <a class="btn" href="${fileUrl}" target="_blank" rel="noreferrer">打开/下载</a>
@@ -252,26 +253,105 @@ async function refreshList(){
 
 async function uploadFiles(files){
   if(!files || files.length===0) return;
-  setStatus(`Uploading ${files.length} file(s)…`);
+
+  const maxBodyBytes = 95 * 1024 * 1024; // soft cap to avoid plan 100MB request body limit
+  const tooBig = Array.from(files).find(f => (f && f.size) > maxBodyBytes);
+  if(tooBig){
+    alert(`单个文件过大：${tooBig.name}
+大小：${fmtBytes(tooBig.size)}
+
+Cloudflare Workers 入站请求体大小通常为 100MB（Free/Pro）。当前网页上传是一次请求完成，超过上限会被拒绝。
+
+解决方案：
+1) 压缩/裁剪视频到 < 95MB 再上传；
+2) 以后我们可升级为“分片上传（multipart）”，可上传更大文件。`);
+    return;
+  }
+
+  const progHost = $("uploadProgress");
+  progHost.innerHTML = "";
+  progHost.style.display = "block";
+
+  const items = Array.from(files).map(f=>{
+    const row = document.createElement("div");
+    row.className = "progRow";
+    row.innerHTML = `
+      <div class="progName">${f.name}</div>
+      <div class="progMeta">${fmtBytes(f.size)}</div>
+      <div class="progBar"><div class="progFill" style="width:0%"></div></div>
+      <div class="progPct">0%</div>
+    `;
+    progHost.appendChild(row);
+    return { f, row, fill: row.querySelector(".progFill"), pct: row.querySelector(".progPct") };
+  });
+
+  setStatus(`Uploading ${items.length} file(s)…`);
   $("uploadBtn").disabled = true;
   $("fileIn").disabled = true;
 
-  const fd = new FormData();
-  for(const f of files){ fd.append("files", f, f.name); }
+  // Upload sequentially (per-file progress)
+  for(const it of items){
+    await new Promise((resolve, reject)=>{
+      const fd = new FormData();
+      fd.append("files", it.f, it.f.name);
 
-  const res = await fetch(mediaUploadUrl(BOX_ID, TOKEN), { method:"POST", body: fd });
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", mediaUploadUrl(BOX_ID, TOKEN), true);
+
+      xhr.upload.onprogress = (e)=>{
+        if(e.lengthComputable){
+          const p = Math.round((e.loaded / e.total) * 100);
+          it.fill.style.width = `${p}%`;
+          it.pct.textContent = `${p}%`;
+        }
+      };
+      xhr.onload = ()=>{
+        if(xhr.status === 401){ reject(new Error("unauthorized")); return; }
+        if(xhr.status >= 200 && xhr.status < 300){
+          it.fill.style.width = "100%";
+          it.pct.textContent = "100%";
+          resolve();
+        } else {
+          const msg = xhr.responseText || `HTTP ${xhr.status}`;
+          alert(`上传失败：${it.f.name}
+${msg}`);
+          resolve();
+        }
+      };
+      xhr.onerror = ()=>{ alert(`网络错误：${it.f.name}`); resolve(); };
+      xhr.send(fd);
+    });
+  }
 
   $("uploadBtn").disabled = false;
   $("fileIn").disabled = false;
-
-  if(res.status===401){ throw new Error("unauthorized"); }
-  if(!res.ok){
-    const t = await res.text().catch(()=> "");
-    alert("上传失败：" + t);
-    return;
-  }
-  await refreshList();
   $("fileIn").value = "";
+
+  await refreshList();
+  setTimeout(()=>{ progHost.style.display="none"; }, 800);
+}
+
+
+function wireDropzone(){
+  const dz = $("dropzone");
+  if(!dz) return;
+
+  const prevent = (e)=>{ e.preventDefault(); e.stopPropagation(); };
+  ["dragenter","dragover","dragleave","drop"].forEach(ev=>{
+    dz.addEventListener(ev, prevent, false);
+    document.body.addEventListener(ev, prevent, false);
+  });
+
+  dz.addEventListener("dragenter", ()=> dz.classList.add("hover"));
+  dz.addEventListener("dragover",  ()=> dz.classList.add("hover"));
+  dz.addEventListener("dragleave", ()=> dz.classList.remove("hover"));
+  dz.addEventListener("drop", async (e)=>{
+    dz.classList.remove("hover");
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length){
+      await uploadFiles(files).catch(handleErr);
+    }
+  });
 }
 
 function wireButtons(){
@@ -340,6 +420,7 @@ function handleErr(e){
   }
 
   wireButtons();
+  wireDropzone();
 
   // Auth: try saved token
   const saved = getSavedToken();
