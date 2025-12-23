@@ -41,6 +41,24 @@
     .progBar{grid-column:1 / -1;height:10px;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#f8fafc}
     .progFill{height:100%;background:#111;width:0%}
     .progPct{grid-column:1 / -1;color:var(--muted);font-size:12px;text-align:right}
+        
+    .sep{width:1px;height:22px;background:var(--line);display:inline-block;vertical-align:middle;margin:0 2px}
+    .btn.on{background:#111;color:#fff;border-color:#111}
+    .btn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+    #fileList.list{display:flex;flex-direction:column;gap:10px}
+    #fileList.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+    .fileRow{display:flex;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .fileLeft{display:flex;gap:10px;align-items:flex-start;min-width:0}
+    .fileInfo{min-width:0}
+    .fileName{font-weight:800;word-break:break-word}
+    .fileMeta{color:var(--muted);font-size:12px;margin-top:4px}
+    .fileActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .gridItem{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+    .gridTop{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;border-bottom:1px solid var(--line)}
+    .gridMeta{color:var(--muted);font-size:12px;text-align:right;white-space:nowrap}
+    .thumb{height:140px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:800}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .gridTitle{padding:10px;font-weight:800;word-break:break-word}
         </style>
 </head>
 <body>
@@ -72,6 +90,7 @@
         把文件拖拽到这里上传（或点右侧“上传文件”）
       </div>
       <div id="uploadProgress" style="display:none"></div>
+      <div id="viewToolbar" style="margin:10px 0 0 0"></div>
       <div class="row" style="justify-content:space-between">
         <div style="font-weight:800">📂 Files in this box</div>
         <div class="row">

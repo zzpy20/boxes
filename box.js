@@ -370,7 +370,37 @@ function wireDropzone(){
   });
 }
 
+
+function wireViewAndBulk(){
+  // Inject toolbar if missing
+  const host = document.getElementById("viewToolbar");
+  if(host && !host.dataset.wired){
+    host.dataset.wired = "1";
+    host.innerHTML = `
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn" id="btnList" type="button">List</button>
+        <button class="btn" id="btnGrid" type="button">Grid</button>
+        <span class="sep"></span>
+        <button class="btn" id="btnSelectAll" type="button">Select all</button>
+        <button class="btn" id="btnClearSel" type="button" disabled>Clear</button>
+        <button class="btn danger" id="btnBulkDelete" type="button" disabled>Delete selected</button>
+        <span class="muted" id="bulkCount">0 selected</span>
+      </div>
+    `;
+  }
+
+  document.getElementById("btnList")?.addEventListener("click", ()=>setViewMode("list"));
+  document.getElementById("btnGrid")?.addEventListener("click", ()=>setViewMode("grid"));
+  document.getElementById("btnSelectAll")?.addEventListener("click", ()=>selectAll());
+  document.getElementById("btnClearSel")?.addEventListener("click", ()=>clearSelected());
+  document.getElementById("btnBulkDelete")?.addEventListener("click", ()=>bulkDelete().catch(handleErr));
+
+  updateViewButtons();
+  updateBulkBar();
+}
+
 function wireButtons(){
+
   $("logoutBtn").onclick = () => { clearToken(); alert("已清除本机授权。"); location.reload(); };
 
   $("openUrlBtn").onclick = async () => {
@@ -437,6 +467,7 @@ function handleErr(e){
 
   wireButtons();
   wireDropzone();
+  wireViewAndBulk();
 
   // Auth: try saved token
   const saved = getSavedToken();
