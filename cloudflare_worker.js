@@ -56,8 +56,40 @@ async function bumpCounter(cache, key, ttlSeconds) {
 }
 
 function sanitizeFilename(name) {
-  const s = String(name || "").replace(/\\/g, "/").split("/").pop();
-  return s.replace(/[^\w.\- ()\[\]{}@+=,;!~'`]/g, "_").slice(0, 180);
+  // Keep Unicode but prevent path traversal, normalize common weird spaces.
+  let s = String(name || "").replace(/\\/g, "/").split("/").pop() || "";
+  try { s = s.normalize("NFC"); } catch {}
+  // normalize special spaces to normal space
+  s = s.replace(/[\u00A0\u202F\u2007]/g, " ");
+  // remove ASCII control chars
+  s = s.replace(/[\u0000-\u001F\u007F]/g, "");
+  s = s.trim().slice(0, 180);
+  if (!s) s = "file";
+  return s;
+}
+
+function legacySanitize(s){
+  // Old v2 behavior: replace non-ASCII-ish chars with underscores (kept for backwards compatibility)
+  return String(s||"")
+    .replace(/[\u00A0\u202F\u2007]/g, "_")
+    .replace(/[^\w.\- ()\[\]{}@+=,;!~'`]/g, "_")
+    .slice(0,180) || "file";
+}
+
+async function r2HeadAny(env, keys){
+  for(const k of keys){
+    const h = await env.BOX_R2.head(k);
+    if(h) return { key: k, head: h };
+  }
+  return null;
+}
+
+async function r2GetAny(env, keys, opts){
+  for(const k of keys){
+    const o = opts ? await env.BOX_R2.get(k, opts) : await env.BOX_R2.get(k);
+    if(o) return { key: k, obj: o };
+  }
+  return null;
 }
 
 function parseRange(rangeHeader, size) {
@@ -162,7 +194,11 @@ async function handleMedia(request, env, origin, tokenOk) {
     const clean = sanitizeFilename(name);
     if (!clean) return json({ ok: false, error: "missing_name" }, 400, corsHeaders(origin));
     const key = prefix + clean;
-    await env.BOX_R2.delete(key);
+    const alt1 = prefix + legacySanitize(clean);
+    const alt2 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
+    const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, " ");
+    const candidates = Array.from(new Set([key, alt1, alt2, alt3]));
+    await env.BOX_R2.delete(candidates);
     return json({ ok: true }, 200, corsHeaders(origin));
   }
 
@@ -173,20 +209,31 @@ async function handleMedia(request, env, origin, tokenOk) {
     if (!clean) return json({ ok: false, error: "missing_filename" }, 400, corsHeaders(origin));
     const key = prefix + clean;
 
-    const head = await env.BOX_R2.head(key);
-    if (!head) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
+    // Backwards-compatible lookup for older sanitized keys (NBSP etc.)
+    const alt1 = prefix + legacySanitize(clean);
+    const alt2 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
+    const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, " ");
+    const candidates = Array.from(new Set([key, alt1, alt2, alt3]));
 
-    const size = head.size;
+    const found = await r2HeadAny(env, candidates);
+    if (!found) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
+
+    const size = found.head.size;
     const range = parseRange(request.headers.get("Range"), size);
-    let obj;
-    if (range) {
-      obj = await env.BOX_R2.get(key, { range: { offset: range.start, length: range.end - range.start + 1 } });
-    } else {
-      obj = await env.BOX_R2.get(key);
-    }
-    if (!obj) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
 
-    const contentType = obj.httpMetadata?.contentType || head.httpMetadata?.contentType || "application/octet-stream";
+    const got = await r2GetAny(
+      env,
+      candidates,
+      range ? { range: { offset: range.start, length: range.end - range.start + 1 } } : undefined
+    );
+    if (!got) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
+
+    const contentType =
+      got.obj.httpMetadata?.contentType ||
+      found.head.httpMetadata?.contentType ||
+      "application/octet-stream";
+
+    
     const headers = {
       ...corsHeaders(origin),
       "Content-Type": contentType,
@@ -201,15 +248,15 @@ async function handleMedia(request, env, origin, tokenOk) {
       contentType.startsWith("audio/") ||
       contentType === "application/pdf" ||
       lower.endsWith(".pdf");
-    headers["Content-Disposition"] = `${inline ? "inline" : "attachment"}; filename="${clean}"`;
+    headers["Content-Disposition"] = `${inline ? "inline" : "attachment"}; filename="${clean.replace(/"/g, "")}"; filename*=UTF-8\'\'${encodeURIComponent(clean)}`;
 
     if (range) {
       headers["Content-Range"] = `bytes ${range.start}-${range.end}/${size}`;
       headers["Content-Length"] = String(range.end - range.start + 1);
-      return new Response(obj.body, { status: 206, headers });
+      return new Response(got.obj.body, { status: 206, headers });
     }
     headers["Content-Length"] = String(size);
-    return new Response(obj.body, { status: 200, headers });
+    return new Response(got.obj.body, { status: 200, headers });
   }
 
   return json({ ok: false, error: "unsupported_media_route" }, 404, corsHeaders(origin));

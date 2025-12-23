@@ -181,6 +181,7 @@ async function refreshList(){
     const lm = it.lastModified ? new Date(it.lastModified).toLocaleString() : "";
     const ext = name.split(".").pop().toLowerCase();
     const isImg = ["jpg","jpeg","png","gif","webp","heic","avif"].includes(ext);
+    const isHeic = (ext === "heic");
     const isVid = ["mp4","mov","m4v","webm"].includes(ext);
     const isAud = ["mp3","m4a","aac","wav","flac","ogg"].includes(ext);
     const isPdf = ext === "pdf";
@@ -208,9 +209,24 @@ async function refreshList(){
       host.appendChild(title);
 
       if(isImg){
-        const img = document.createElement("img");
-        img.src = fileUrl; img.alt = name; img.className = "previewImg";
-        host.appendChild(img);
+        if(isHeic){
+          const p = document.createElement("div");
+          p.className = "previewHint";
+          p.textContent = "HEIC 在部分浏览器（Chrome/Edge）不支持直接预览。请点“打开/下载”，或用 Safari 查看。";
+          host.appendChild(p);
+
+          const a = document.createElement("a");
+          a.href = fileUrl;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.className = "btn";
+          a.textContent = "打开/下载 HEIC";
+          host.appendChild(a);
+        } else {
+          const img = document.createElement("img");
+          img.src = fileUrl; img.alt = name; img.className = "previewImg";
+          host.appendChild(img);
+        }
       } else if(isVid){
         const v = document.createElement("video");
         v.controls = true; v.playsInline = true; v.className = "previewMedia";
