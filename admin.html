@@ -2,152 +2,45 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>🛠 Admin - key/note/tags</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - boxes.json</title>
   <style>
-    :root { --bg:#f6f7f9; --card:#fff; --text:#111; --muted:#666; --line:#e6e8ee; --btn:#111; --btnText:#fff; }
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;margin:0;padding:16px;background:var(--bg);color:var(--text);}
-    header{max-width:1180px;margin:0 auto 12px;}
-    h1{margin:0 0 8px;font-size:20px;}
-    .sub{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 10px;}
-    .bar{max-width:1180px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-    .bar input[type="search"]{flex:1;min-width:220px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;}
-    .btn{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;}
-    .btn.primary{background:var(--btn);color:var(--btnText);border-color:var(--btn);}
-    .wrap{max-width:1180px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
-    table{width:100%;border-collapse:collapse;}
-    th,td{border-bottom:1px solid var(--line);padding:10px;vertical-align:top;}
-    th{background:#fafbfc;text-align:left;font-size:12px;color:#334155;position:sticky;top:0;z-index:2;}
-    td{font-size:13px;}
-    .id{width:80px;font-weight:800;white-space:nowrap;}
-    input[type="text"],textarea{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;outline:none;}
-    textarea{min-height:42px;resize:vertical;}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:12px;}
-    .rowHidden{display:none;}
-    footer{max-width:1180px;margin:12px auto 0;color:var(--muted);font-size:12px;text-align:center;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;padding:16px;background:#f6f7f9;color:#111}
+    .wrap{max-width:1100px;margin:0 auto}
+    h1{margin:0 0 10px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid #e6e8ee;background:#fff;cursor:pointer;font-size:13px}
+    textarea{width:100%;min-height:240px;border-radius:12px;border:1px solid #e6e8ee;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .hint{color:#64748b;font-size:13px;line-height:1.4}
   </style>
 </head>
 <body>
-<header>
-  <h1>🛠 Admin：编辑 key / 备注 / tags（URL 在 Cloudflare KV 私有管理）</h1>
-  <p class="sub">编辑完点击 <b>Download boxes.json</b> → 上传覆盖 GitHub 仓库根目录并 commit。</p>
-</header>
-
-<div class="bar">
-  <input id="search" type="search" placeholder="搜索：01 / box-01 / key / 关键词 / tags ..." />
-  <button class="btn" id="loadRemote">Load current boxes.json</button>
-  <label class="btn" for="fileIn">Import boxes.json</label>
-  <input id="fileIn" type="file" accept="application/json" style="display:none" />
-  <button class="btn primary" id="download">Download boxes.json</button>
-</div>
-
-<div class="wrap">
-  <table>
-    <thead>
-      <tr>
-        <th class="id">ID</th>
-        <th>KEY (KV key)</th>
-        <th>Note / 备注</th>
-        <th>Tags（空格分隔）</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-</div>
-<footer>真实 URL 不在 GitHub；在 Cloudflare KV：key → URL（私有）</footer>
-
+  <div class="wrap">
+    <h1>Admin（本地编辑 boxes.json）</h1>
+    <div class="hint">这是一个简化版：直接编辑 JSON，点“下载”。如果你之前的 admin.html 功能更强（批量导入等），保留你原来的即可。</div>
+    <div class="bar">
+      <button class="btn" id="load">加载 boxes.json</button>
+      <button class="btn" id="download">下载 boxes.json</button>
+      <a class="btn" href="./index.html">返回索引</a>
+    </div>
+    <textarea id="ta" spellcheck="false"></textarea>
+  </div>
 <script>
-  const BOX_COUNT=50;
-  const pad2=n=>String(n).padStart(2,"0");
-  const norm=s=>(s||"").toString().trim().toLowerCase();
-  const splitTags=s=>{
-    const raw=(s||"").trim(); if(!raw) return [];
-    return raw.split(/\s+/g).map(t=>t.trim()).filter(Boolean);
-  };
-  const joinTags=arr=>Array.isArray(arr)?arr.map(x=>String(x).trim()).filter(Boolean).join(" "):"";
-
-  let boxes=Array.from({length:BOX_COUNT},(_,i)=>({id:pad2(i+1),key:"",note:"",tags:[]}));
-
-  function escapeHtml(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-
-  function render(){
-    const tbody=document.getElementById("tbody");
-    tbody.innerHTML="";
-    for(const b of boxes){
-      const tr=document.createElement("tr");
-      tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags)].join(" ").toLowerCase();
-      tr.innerHTML = `
-        <td class="id">BOX-${b.id}</td>
-        <td><input class="mono" type="text" data-k="key" value="${escapeHtml(b.key||"")}" placeholder="kitchen_docs" /></td>
-        <td><textarea data-k="note" placeholder="例如：充电线/电源适配器...">${escapeHtml(b.note||"")}</textarea></td>
-        <td><input type="text" data-k="tags" value="${escapeHtml(joinTags(b.tags))}" placeholder="cables chargers kids ..." /></td>
-      `;
-      tr.querySelectorAll("[data-k]").forEach(el=>{
-        el.addEventListener("input",()=>{
-          const k=el.dataset.k;
-          if(k==="tags") b.tags=splitTags(el.value);
-          else b[k]=el.value;
-          tr.dataset.search=[b.id,b.key||"",b.note||"",joinTags(b.tags)].join(" ").toLowerCase();
-        });
-      });
-      tbody.appendChild(tr);
-    }
-  }
-
-  async function loadRemote(){
-    const res=await fetch("./boxes.json",{cache:"no-store"});
-    if(!res.ok) throw new Error("boxes.json not found");
-    const data=await res.json();
-    const arr=Array.isArray(data.boxes)?data.boxes:[];
-    const map=new Map();
-    for(const r of arr){
-      const id=pad2(parseInt(r.id,10));
-      map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||"") });
-    }
-    boxes=Array.from({length:BOX_COUNT},(_,i)=> map.get(pad2(i+1)) || {id:pad2(i+1),key:"",note:"",tags:[]});
-    render();
-    alert("Loaded current boxes.json ✅");
-  }
-
-  function downloadJson(){
-    const out={ boxes: boxes.map(b=>({ id:b.id, key:(b.key||"").toString().trim(), note:(b.note||"").toString(), tags:Array.isArray(b.tags)?b.tags:splitTags(b.tags||"") })) };
-    const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json;charset=utf-8"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="boxes.json";
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-  }
-
-  document.getElementById("search").addEventListener("input",(e)=>{
-    const term=norm(e.target.value);
-    document.querySelectorAll("#tbody tr").forEach(tr=>tr.classList.toggle("rowHidden", term && !tr.dataset.search.includes(term)));
-  });
-
-  document.getElementById("fileIn").addEventListener("change", async (e)=>{
-    const file=e.target.files && e.target.files[0]; if(!file) return;
-    const text=await file.text();
-    try{
-      const data=JSON.parse(text);
-      const arr=Array.isArray(data.boxes)?data.boxes:[];
-      const map=new Map();
-      for(const r of arr){
-        const id=pad2(parseInt(r.id,10));
-        map.set(id,{ id, key:(r.key||"").toString(), note:(r.note||"").toString(), tags:Array.isArray(r.tags)?r.tags:splitTags(r.tags||"") });
-      }
-      boxes=Array.from({length:BOX_COUNT},(_,i)=> map.get(pad2(i+1)) || {id:pad2(i+1),key:"",note:"",tags:[]});
-      render();
-      alert("Imported boxes.json ✅");
-    } catch(err){
-      alert("Invalid JSON.");
-    } finally {
-      e.target.value="";
-    }
-  });
-
-  document.getElementById("loadRemote").addEventListener("click", ()=>loadRemote().catch(err=>alert(err.message)));
-  document.getElementById("download").addEventListener("click", downloadJson);
-
-  render();
+const ta=document.getElementById("ta");
+document.getElementById("load").onclick=async()=>{
+  const r=await fetch("boxes.json",{cache:"no-store"});
+  ta.value=await r.text();
+};
+document.getElementById("download").onclick=()=>{
+  try{ JSON.parse(ta.value); }catch(e){ alert("JSON 无法解析：\n"+e.message); return; }
+  const blob=new Blob([ta.value],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="boxes.json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
 </script>
 </body>
 </html>

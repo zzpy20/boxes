@@ -15,7 +15,6 @@
     .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
     .pill{font-size:12px;color:#475569;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
     .btn{padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px}
-    .btn.primary{background:var(--btn);color:var(--btnText);border-color:var(--btn)}
     .toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:12px;}
     input[type="search"]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);outline:none;font-size:15px;background:#fff;}
     .counter{font-size:13px;color:var(--muted);padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:12px;white-space:nowrap;}
@@ -27,8 +26,7 @@
     .title{font-weight:800;letter-spacing:.3px;font-size:16px;margin-bottom:6px;}
     .note{color:var(--muted);font-size:13px;line-height:1.35;min-height:34px;white-space:pre-wrap;}
     .tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
-    .tag{font-size:12px;color:#334155;background:#eef2ff;padding:4px 8px;border-radius:999px;border:1px solid #e0e7ff;}
-    /* ⭐ 新增：标签 hover 提示可点击 */
+    .tag{font-size:12px;color:#334155;background:#eef2ff;padding:4px 8px;border-radius:999px;border:1px solid #e0e7ff;cursor:pointer;}
     .tag:hover{background:#dbeafe;border-color:#93c5fd;}
     .empty{max-width:1020px;margin:18px auto 0;color:var(--muted);font-size:14px;padding:12px 14px;background:#fff;border:1px dashed var(--line);border-radius:12px;display:none;}
     footer{max-width:1020px;margin:18px auto 0;color:var(--muted);font-size:12px;text-align:center;}
@@ -45,9 +43,8 @@
     <a class="smallLink" href="./admin.html">Admin（编辑 boxes.json）</a>
   </div>
   <p class="sub">
-    GitHub 只存 <code>key</code>（不存 URL）。真实 URL 在 Cloudflare KV（私有）里。<br>
-    访问箱子需要口令；首次输入后会记住本机（localStorage）。<br>
-    💡 你现在可以直接点击标签（tag）来筛选。
+    GitHub 只存 <code>key</code>（不存 URL / 文件）。真实 URL 在 Cloudflare KV（私有）；文件在 Cloudflare R2（私有）。<br>
+    访问箱子需要口令；首次输入后会记住本机（localStorage）。💡 可点击标签筛选。
   </p>
   <div class="toolbar">
     <input id="q" type="search" placeholder="搜索：BOX-23 / cables / 冬季 / kids …" autocomplete="off" />
@@ -113,7 +110,6 @@
   }
   q.addEventListener("input", applyFilter);
 
-  // ⭐ 关键：标签可点击 → 自动筛选
   function filterByTag(tag){
     q.value = tag;
     applyFilter();
@@ -143,16 +139,12 @@
       const s=document.createElement("span");
       s.className="tag";
       s.textContent=tag;
-
-      // ⭐ 点击标签：不跳转 box，直接筛选
-      s.style.cursor="pointer";
       s.title=`筛选标签：${tag}`;
       s.addEventListener("click",(e)=>{
         e.preventDefault();
         e.stopPropagation();
         filterByTag(tag);
       });
-
       tagsWrap.appendChild(s);
     });
 
@@ -161,7 +153,6 @@
     if((box.tags||[]).length) c.appendChild(tagsWrap);
     a.appendChild(c);
 
-    // 搜索索引
     a.dataset.search=[`box-${box.id}`,box.id,box.key||"",box.note||"", (box.tags||[]).join(" ")].join(" ").toLowerCase();
     return a;
   }
@@ -182,9 +173,8 @@
   }
 
   (async()=>{
-    try{
-      render(await loadBoxes());
-    }catch(e){
+    try{ render(await loadBoxes()); }
+    catch(e){
       const fb=[];
       for(let i=1;i<=50;i++) fb.push({id:pad2(i),key:"",note:"",tags:[]});
       render(fb);

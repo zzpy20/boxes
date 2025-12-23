@@ -2,309 +2,353 @@
   "boxes": [
     {
       "id": "01",
-      "key": "box001",
-      "note": "camping, 露营",
-      "tags": [
-        "camping",
-        "clothes，",
-        "露营"
-      ]
+      "key": "",
+      "note": "",
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "02",
-      "key": "box002",
-      "note": "flatable boat",
-      "tags": [
-        "书"
-      ]
+      "key": "",
+      "note": "",
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "03",
-      "key": "box003",
-      "note": "books",
-      "tags": []
+      "key": "",
+      "note": "",
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "04",
-      "key": "box004",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "05",
-      "key": "box005",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "06",
-      "key": "box006",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "07",
-      "key": "box007",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "08",
-      "key": "box008",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "09",
-      "key": "box009",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "10",
-      "key": "box010",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "11",
-      "key": "box011",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "12",
-      "key": "box012",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "13",
-      "key": "box013",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "14",
-      "key": "box014",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "15",
-      "key": "box015",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "16",
-      "key": "box016",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "17",
-      "key": "box017",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "18",
-      "key": "box018",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "19",
-      "key": "box019",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "20",
-      "key": "box020",
+      "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "21",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "22",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "23",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "24",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "25",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "26",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "27",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "28",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "29",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "30",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "31",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "32",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "33",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "34",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "35",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "36",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "37",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "38",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "39",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "40",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "41",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "42",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "43",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "44",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "45",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "46",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "47",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "48",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "49",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     },
     {
       "id": "50",
       "key": "",
       "note": "",
-      "tags": []
+      "tags": [],
+      "preview": ""
     }
   ]
 }
