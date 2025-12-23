@@ -1,4 +1,32 @@
 // box.js — v7.1 stable baseline (syntax-safe)
+// ===== Auth hard-gate (for current HTML IDs) =====
+(function () {
+  const pill = document.getElementById("authPill");
+
+  // If token already exists, just show status and continue.
+  const existing = localStorage.getItem("boxes_auth_token") || "";
+  if (existing) {
+    if (pill) pill.textContent = "Auth: ✓";
+    return;
+  }
+
+  // Otherwise, require secret before any page logic continues.
+  const secret = (prompt("Enter secret to access this box:") || "").trim();
+
+  if (!secret) {
+    // User cancelled/closed prompt -> bounce back to index
+    location.href = "/boxes/";
+    // Stop further script execution
+    throw new Error("Auth required");
+  }
+
+  localStorage.setItem("boxes_auth_token", secret);
+  if (pill) pill.textContent = "Auth: ✓";
+
+  // Continue to the rest of your box.js code.
+})();
+
+
 
 let TOKEN = localStorage.getItem("boxes_auth_token") || "";
 
