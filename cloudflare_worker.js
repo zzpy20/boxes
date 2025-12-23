@@ -55,6 +55,11 @@ async function bumpCounter(cache, key, ttlSeconds) {
   return n;
 }
 
+function safeDecodePathPart(s){
+  // URL.pathname keeps percent-encoding; decode to get real filename (spaces/Chinese/etc.)
+  try { return decodeURIComponent(s); } catch { return s; }
+}
+
 function sanitizeFilename(name) {
   // Keep Unicode but prevent path traversal, normalize common weird spaces.
   let s = String(name || "").replace(/\\/g, "/").split("/").pop() || "";
@@ -191,7 +196,7 @@ async function handleMedia(request, env, origin, tokenOk) {
   // DELETE ONE
   if (parts.length === 3 && parts[2] === "file" && request.method === "DELETE") {
     const name = url.searchParams.get("name") || "";
-    const clean = sanitizeFilename(name);
+    const clean = sanitizeFilename(safeDecodePathPart(name));
     if (!clean) return json({ ok: false, error: "missing_name" }, 400, corsHeaders(origin));
     const key = prefix + clean;
     const alt1 = prefix + legacySanitize(clean);
@@ -204,16 +209,23 @@ async function handleMedia(request, env, origin, tokenOk) {
 
   // GET FILE
   if (request.method === "GET" && parts.length >= 3) {
-    const filename = parts.slice(2).join("/");
-    const clean = sanitizeFilename(filename);
-    if (!clean) return json({ ok: false, error: "missing_filename" }, 400, corsHeaders(origin));
+    const rawFilename = parts.slice(2).map(safeDecodePathPart).join("/");
+    let raw = rawFilename || "";
+    try { raw = raw.normalize("NFC"); } catch {}
+    // Do NOT sanitize away special spaces yet; we use raw as one candidate exactly as stored.
+    const clean = sanitizeFilename(raw);
+
     const key = prefix + clean;
 
-    // Backwards-compatible lookup for older sanitized keys (NBSP etc.)
-    const alt1 = prefix + legacySanitize(clean);
-    const alt2 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
-    const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, " ");
-    const candidates = Array.from(new Set([key, alt1, alt2, alt3]));
+    // Backwards-compatible lookup for older sanitized keys / special spaces / exact raw key
+    const rawKey = prefix + raw;
+    const rawSpaceKey = prefix + raw.replace(/[\\u00A0\\u202F\\u2007]/g, " ");
+    const rawUnderscoreKey = prefix + raw.replace(/[\\u00A0\\u202F\\u2007]/g, "_");
+    const alt1 = prefix + legacySanitize(raw);
+    const alt2 = prefix + legacySanitize(clean);
+    const alt3 = prefix + clean.replace(/[\\u00A0\\u202F\\u2007]/g, "_");
+
+    const candidates = Array.from(new Set([rawKey, rawSpaceKey, rawUnderscoreKey, key, alt1, alt2, alt3]));
 
     const found = await r2HeadAny(env, candidates);
     if (!found) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
