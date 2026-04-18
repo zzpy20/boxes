@@ -7,6 +7,7 @@
   <title>Box</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -26,7 +27,7 @@
       --tag-bg:#2A2A27;--tag-text:#B8B8B0;
     }}
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
-    .wrap{max-width:860px;margin:0 auto;padding:24px 24px 48px;}
+    .wrap{max-width:900px;margin:0 auto;padding:24px 24px 48px;}
 
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:20px;flex-wrap:wrap;}
     .breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.15s;}
@@ -47,6 +48,7 @@
     .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
     .btn.danger{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border);}
     .btn.sm{padding:5px 10px;font-size:12px;}
+    .btn.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
 
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;}
     .card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:14px;}
@@ -69,28 +71,37 @@
     .dropzone:hover,.dropzone.hover{background:var(--surface-2);border-color:var(--text);color:var(--text);}
     .dropzone-icon{font-size:18px;margin-bottom:4px;}
 
-    .files-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+    .files-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+    .files-left{display:flex;align-items:center;gap:10px;}
     .files-title{font-size:14px;font-weight:600;}
     .files-actions{display:flex;gap:6px;flex-wrap:wrap;}
+    .view-toggle{display:flex;gap:4px;}
 
-    /* File row */
+    /* ── LIST VIEW ── */
     .fileRow{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);margin-bottom:6px;transition:border-color 0.15s;}
     .fileRow:hover{border-color:var(--border-strong);}
-
-    /* Thumbnail / icon */
-    .fileThumb{width:48px;height:48px;border-radius:8px;overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative;cursor:pointer;}
-    .fileThumb img{width:100%;height:100%;object-fit:cover;display:block;}
-
-    /* Hover popup preview */
-    .fileThumb:hover .thumbPopup{opacity:1;pointer-events:none;}
-    .thumbPopup{position:absolute;left:56px;top:50%;transform:translateY(-50%);z-index:100;opacity:0;transition:opacity 0.15s;pointer-events:none;}
-    .thumbPopup img{width:240px;height:240px;object-fit:contain;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);box-shadow:0 8px 32px rgba(0,0,0,0.15);}
-
+    .fileThumb{width:48px;height:48px;border-radius:8px;overflow:visible;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative;cursor:pointer;}
+    .fileThumb img.thumb-img{width:48px;height:48px;object-fit:cover;border-radius:8px;display:block;}
+    .fileThumb:hover .thumbPopup{opacity:1;}
+    .thumbPopup{position:absolute;left:56px;top:50%;transform:translateY(-50%);z-index:200;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+    .thumbPopup img{width:220px;height:220px;object-fit:contain;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);box-shadow:0 8px 32px rgba(0,0,0,0.18);}
     .fileMain{min-width:0;}
     .fileName{font-size:14px;font-weight:600;line-height:1.35;overflow-wrap:break-word;word-break:break-word;}
     .fileMeta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
     .fileBtns{display:flex;gap:5px;flex-shrink:0;}
 
+    /* ── GRID VIEW ── */
+    #files.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+    #files.grid-view .fileRow{display:flex;flex-direction:column;align-items:center;padding:12px 10px;gap:8px;border-radius:var(--radius-sm);}
+    #files.grid-view .fileThumb{width:100%;height:120px;border-radius:10px;font-size:36px;}
+    #files.grid-view .fileThumb img.thumb-img{width:100%;height:120px;object-fit:cover;border-radius:10px;}
+    #files.grid-view .thumbPopup{left:50%;top:auto;bottom:calc(100% + 8px);transform:translateX(-50%);}
+    #files.grid-view .fileMain{width:100%;text-align:center;}
+    #files.grid-view .fileName{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #files.grid-view .fileMeta{font-size:10px;}
+    #files.grid-view .fileBtns{justify-content:center;}
+
+    /* Progress */
     .progRow{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);margin-bottom:6px;}
     .progHeader{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;}
     .progName{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -101,6 +112,9 @@
 
     #status{font-size:13px;color:var(--muted);margin-top:2px;}
     #empty{color:var(--muted);font-size:13px;display:none;padding:20px 0;text-align:center;}
+
+    /* HEIC converting spinner */
+    .heic-loading{font-size:11px;color:var(--muted);font-family:var(--mono);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border-radius:8px;}
   </style>
 </head>
 <body>
@@ -150,7 +164,13 @@
     </div>
     <div id="uploadProgress" style="display:none"></div>
     <div class="files-header">
-      <div class="files-title">Files</div>
+      <div class="files-left">
+        <div class="files-title">Files</div>
+        <div class="view-toggle">
+          <button class="btn sm active" id="btnList" onclick="setView('list')" title="List view">☰</button>
+          <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid view">⊞</button>
+        </div>
+      </div>
       <div class="files-actions">
         <input id="fileIn" type="file" style="display:none" multiple />
         <button class="btn primary" id="uploadBtn">Upload</button>
@@ -171,6 +191,25 @@
     document.getElementById("notesEditor").focus();
   }
   document.getElementById("dropzone").addEventListener("click", function() { document.getElementById("fileIn").click(); });
+
+  var currentView = localStorage.getItem("boxView") || "list";
+  function setView(v) {
+    currentView = v;
+    localStorage.setItem("boxView", v);
+    var files = document.getElementById("files");
+    var btnList = document.getElementById("btnList");
+    var btnGrid = document.getElementById("btnGrid");
+    if (v === "grid") {
+      files.classList.add("grid-view");
+      btnGrid.classList.add("active");
+      btnList.classList.remove("active");
+    } else {
+      files.classList.remove("grid-view");
+      btnList.classList.add("active");
+      btnGrid.classList.remove("active");
+    }
+  }
+  setView(currentView);
 </script>
 <script src="../box.js"></script>
 </body>
