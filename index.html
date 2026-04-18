@@ -9,343 +9,86 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #F7F7F5;
-      --surface: #FFFFFF;
-      --surface-2: #F0EFEB;
-      --border: rgba(0,0,0,0.07);
-      --border-strong: rgba(0,0,0,0.13);
-      --text: #0F0F0E;
-      --muted: #787873;
-      --accent: #0F0F0E;
-      --accent-fg: #FFFFFF;
-      --tag-bg: #EFEFEB;
-      --tag-text: #3C3C38;
-      --cover-bg: #EEECEA;
-      --radius: 16px;
-      --radius-sm: 10px;
-      --font: 'DM Sans', -apple-system, sans-serif;
-      --mono: 'DM Mono', monospace;
+      --bg:#F7F7F5;--surface:#FFFFFF;--surface-2:#F0EFEB;
+      --border:rgba(0,0,0,0.07);--border-strong:rgba(0,0,0,0.13);
+      --text:#0F0F0E;--muted:#787873;--accent:#0F0F0E;--accent-fg:#FFFFFF;
+      --tag-bg:#EFEFEB;--tag-text:#3C3C38;
+      --cover-bg:#EEECEA;--radius:16px;--radius-sm:10px;
+      --font:'DM Sans',-apple-system,sans-serif;--mono:'DM Mono',monospace;
     }
+    @media(prefers-color-scheme:dark){:root{
+      --bg:#111110;--surface:#1C1C1A;--surface-2:#242422;
+      --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.13);
+      --text:#F0EFEB;--muted:#88887F;--accent:#F0EFEB;--accent-fg:#111110;
+      --tag-bg:#2A2A27;--tag-text:#B8B8B0;--cover-bg:#252523;
+    }}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+    .page{max-width:1080px;margin:0 auto;padding:40px 24px 48px;}
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #111110;
-        --surface: #1C1C1A;
-        --surface-2: #242422;
-        --border: rgba(255,255,255,0.07);
-        --border-strong: rgba(255,255,255,0.13);
-        --text: #F0EFEB;
-        --muted: #88887F;
-        --accent: #F0EFEB;
-        --accent-fg: #111110;
-        --tag-bg: #2A2A27;
-        --tag-text: #B8B8B0;
-        --cover-bg: #252523;
-      }
-    }
+    .header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .site-title{font-size:24px;font-weight:600;letter-spacing:-0.3px;}
+    .site-sub{font-size:13px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+    .status-pill{display:flex;align-items:center;gap:6px;background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97;font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;}
+    @media(prefers-color-scheme:dark){.status-pill{background:#173404;color:#C0DD97;border-color:#3B6D11;}}
+    .dot{width:7px;height:7px;border-radius:50%;background:#3B6D11;}
+    @media(prefers-color-scheme:dark){.dot{background:#C0DD97;}}
 
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
+    /* Search */
+    .search-wrap{position:relative;margin-bottom:24px;}
+    .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
+    .search-input{font-family:var(--font);font-size:14px;width:100%;padding:11px 14px 11px 40px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+    .search-input:focus{border-color:var(--border-strong);}
+    .search-input::placeholder{color:var(--muted);}
 
-    /* ── Header ── */
-    .header {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 40px 24px 0;
-    }
+    .section-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;}
 
-    .header-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
+    .grid{display:grid;gap:12px;margin-bottom:2rem;}
+    .grid-2{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
 
-    .header-left h1 {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      line-height: 1.1;
-      margin-bottom: 4px;
-    }
+    a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.15s,transform 0.1s;}
+    a.card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+    a.card:active{transform:translateY(0);}
+    a.card.hidden{display:none;}
 
-    .header-left p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
+    .cover{height:120px;background:var(--cover-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+    .cover img{width:100%;height:100%;object-fit:cover;display:block;}
+    .cover-placeholder{font-size:28px;opacity:0.4;}
+    .cover-label{position:absolute;bottom:8px;left:8px;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:2px 7px;border-radius:999px;}
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .card-body{padding:12px 14px 14px;}
+    .card-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-bottom:2px;}
+    .card-note{font-size:13px;color:var(--muted);line-height:1.45;min-height:36px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .card-tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;}
+    .tag{font-size:11px;font-weight:500;color:var(--tag-text);background:var(--tag-bg);padding:3px 8px;border-radius:999px;cursor:pointer;border:none;transition:opacity 0.15s;}
+    .tag:hover{opacity:0.7;}
 
-    .pill {
-      font-size: 12px;
-      font-family: var(--mono);
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 5px 10px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
+    .empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);display:none;}
 
-    .pill.ok { color: #3B6D11; background: #EAF3DE; border-color: #C0DD97; }
-    .pill.err { color: #A32D2D; background: #FCEBEB; border-color: #F7C1C1; }
+    .counter{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;}
 
-    @media (prefers-color-scheme: dark) {
-      .pill.ok { color: #C0DD97; background: #173404; border-color: #3B6D11; }
-      .pill.err { color: #F7C1C1; background: #501313; border-color: #A32D2D; }
-    }
-
-    .btn {
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 7px 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-strong);
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      transition: opacity 0.15s;
-      white-space: nowrap;
-    }
-    .btn:hover { opacity: 0.75; }
-
-    .btn-link {
-      font-size: 13px;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border-strong);
-      transition: color 0.15s;
-    }
-    .btn-link:hover { color: var(--text); }
-
-    /* ── Toolbar ── */
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .search-wrap {
-      position: relative;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      pointer-events: none;
-      font-size: 14px;
-    }
-
-    input[type="search"] {
-      font-family: var(--font);
-      font-size: 14px;
-      width: 100%;
-      padding: 11px 14px 11px 38px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
-    }
-    input[type="search"]:focus { border-color: var(--border-strong); }
-    input[type="search"]::placeholder { color: var(--muted); }
-
-    .counter {
-      font-size: 13px;
-      font-family: var(--mono);
-      color: var(--muted);
-      white-space: nowrap;
-      padding: 11px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-
-    /* ── Grid ── */
-    .grid {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 0 24px 48px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
-    }
-
-    a.card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: border-color 0.15s, transform 0.1s;
-    }
-    a.card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
-    a.card:active { transform: translateY(0); }
-
-    .cover {
-      height: 140px;
-      background: var(--cover-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .cover-placeholder {
-      font-size: 28px;
-      opacity: 0.4;
-    }
-
-    .cover-label {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 2px 7px;
-      border-radius: 999px;
-    }
-
-    .card-body {
-      padding: 12px 14px 14px;
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-      margin-bottom: 5px;
-    }
-
-    .card-note {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.45;
-      min-height: 36px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .card-tags {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .tag {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--tag-text);
-      background: var(--tag-bg);
-      padding: 3px 8px;
-      border-radius: 999px;
-      cursor: pointer;
-      border: none;
-      transition: opacity 0.15s;
-    }
-    .tag:hover { opacity: 0.7; }
-
-    /* ── Empty state ── */
-    .empty {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: none;
-    }
-
-    .empty-inner {
-      padding: 32px;
-      background: var(--surface);
-      border: 1px dashed var(--border-strong);
-      border-radius: var(--radius);
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    /* ── Footer ── */
-    footer {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 0 24px 32px;
-      color: var(--muted);
-      font-size: 12px;
-      font-family: var(--mono);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-    }
+    footer{max-width:1080px;margin:0 auto;padding:16px 24px 32px;color:var(--muted);font-size:12px;font-family:var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);}
   </style>
 </head>
 <body>
-
-<div class="header">
+<div class="page">
   <div class="header-top">
-    <div class="header-left">
-      <h1>Storage Boxes</h1>
-      <p>Private file storage · Cloudflare R2 + KV</p>
+    <div>
+      <div class="site-title">Storage Boxes</div>
+      <div class="site-sub">boxes.1000600.xyz</div>
     </div>
-    <div class="header-actions">
-      <span class="pill" id="authStatus">Auth: checking…</span>
-      <button class="btn" id="logoutBtn">Sign out</button>
-      <a class="btn-link" href="./admin.html">Admin</a>
-    </div>
+    <div class="status-pill"><span class="dot"></span>Private · Cloudflare R2</div>
   </div>
-  <div class="toolbar">
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input id="q" type="search" placeholder="Search boxes, notes, tags…" autocomplete="off" />
-    </div>
-    <div class="counter" id="counter">—</div>
-  </div>
-</div>
 
-<div class="grid" id="grid"></div>
-<div class="empty" id="empty"><div class="empty-inner">No boxes match your search.</div></div>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" id="q" type="search" placeholder="Search boxes, notes, tags…" autocomplete="off" />
+  </div>
+
+  <div class="counter" id="counter">Loading…</div>
+  <div class="grid grid-2" id="grid"></div>
+  <div class="empty" id="empty">No boxes match your search.</div>
+</div>
 
 <footer>
   <span>zzpy20 · Cloudflare Pages</span>
@@ -353,216 +96,109 @@
 </footer>
 
 <script>
-  const TOKEN_KEY = "boxes_auth_token";
-  const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
+  const TOKEN_KEY="boxes_auth_token";
+  const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
 
-  const $ = id => document.getElementById(id);
-  const getTok = () => { try { return (localStorage.getItem(TOKEN_KEY)||"").trim(); } catch { return ""; } };
+  function getTok(){try{return(localStorage.getItem(TOKEN_KEY)||"").trim();}catch{return"";}}
+  function mediaFileUrl(id,name,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/"+encodeURIComponent(name));u.searchParams.set("t",t);return u.toString();}
+  function mediaListUrl(id,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/list");u.searchParams.set("t",t);return u.toString();}
 
-  function setAuthStatus() {
-    const el = $("authStatus");
-    if (getTok()) {
-      el.textContent = "Authenticated ✓";
-      el.className = "pill ok";
-    } else {
-      el.textContent = "Not signed in";
-      el.className = "pill err";
-    }
+  document.getElementById("stamp").textContent=new Date().toISOString().slice(0,10);
+
+  const pad2=n=>String(n).padStart(2,"0");
+  const normalize=s=>(s||"").toString().trim().toLowerCase();
+
+  function isImage(name){return["jpg","jpeg","png","gif","webp","avif"].includes((name||"").split(".").pop().toLowerCase());}
+
+  async function loadCoverForCard(card,token){
+    const boxId=card.dataset.boxid;const cover=card.querySelector(".cover");
+    if(!boxId||!cover||cover.dataset.loaded)return;cover.dataset.loaded="1";
+    try{
+      const res=await fetch(mediaListUrl(boxId,token),{cache:"no-store"});
+      if(!res.ok)return;const arr=await res.json();
+      const first=(Array.isArray(arr)?arr:[]).map(x=>x.name).find(isImage);
+      if(!first)return;
+      const img=new Image();img.loading="lazy";img.src=mediaFileUrl(boxId,first,token);img.alt=`BOX-${boxId} cover`;
+      const ph=cover.querySelector(".cover-placeholder");
+      img.onload=()=>{if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
+    }catch{}
   }
 
-  $("logoutBtn").addEventListener("click", () => {
-    try { localStorage.removeItem(TOKEN_KEY); } catch {}
-    setAuthStatus();
-    alert("Signed out. You'll be asked for your passphrase next time.");
-  });
-
-  setAuthStatus();
-  $("stamp").textContent = new Date().toISOString().slice(0, 10);
-
-  const pad2 = n => String(n).padStart(2, "0");
-  const normalize = s => (s||"").toString().trim().toLowerCase();
-
-  function mediaListUrl(boxId, token) {
-    const u = new URL(WORKER_BASE + `media/box-${boxId}/list`);
-    u.searchParams.set("t", token);
-    return u.toString();
+  function setupCoverLazyLoader(){
+    const token=getTok();if(!token)return;
+    const cards=[...document.querySelectorAll("a.card")];const queue=[];let running=0;const MAX=4;
+    const pump=()=>{while(running<MAX&&queue.length){const card=queue.shift();running++;loadCoverForCard(card,token).finally(()=>{running--;pump();});}};
+    const io=new IntersectionObserver((entries)=>{for(const en of entries){if(en.isIntersecting){io.unobserve(en.target);queue.push(en.target);}}pump();},{rootMargin:"200px"});
+    cards.forEach(c=>io.observe(c));
   }
 
-  function mediaFileUrl(boxId, filename, token) {
-    const u = new URL(WORKER_BASE + `media/box-${boxId}/${encodeURIComponent(filename)}`);
-    u.searchParams.set("t", token);
-    return u.toString();
-  }
-
-  function isImage(name) {
-    const ext = (name||"").split(".").pop().toLowerCase();
-    return ["jpg","jpeg","png","gif","webp","heic","avif"].includes(ext);
-  }
-
-  async function loadCoverForCard(card, token) {
-    const boxId = card.dataset.boxid;
-    const cover = card.querySelector(".cover");
-    if (!boxId || !cover || cover.dataset.loaded) return;
-    cover.dataset.loaded = "1";
-    try {
-      const res = await fetch(mediaListUrl(boxId, token), { cache: "no-store" });
-      if (!res.ok) return;
-      const arr = await res.json();
-      const first = (Array.isArray(arr) ? arr : []).map(x => x.name).find(isImage);
-      if (!first) return;
-      const img = new Image();
-      img.loading = "lazy";
-      img.src = mediaFileUrl(boxId, first, token);
-      img.alt = `BOX-${boxId}`;
-      const placeholder = cover.querySelector(".cover-placeholder");
-      img.onload = () => {
-        if (placeholder) placeholder.style.display = "none";
-        cover.insertBefore(img, cover.querySelector(".cover-label"));
-      };
-    } catch {}
-  }
-
-  function setupCoverLazyLoader() {
-    const token = getTok();
-    if (!token) return;
-    const cards = [...document.querySelectorAll("a.card")];
-    const queue = [];
-    let running = 0;
-    const MAX = 4;
-    const pump = () => {
-      while (running < MAX && queue.length) {
-        const card = queue.shift();
-        running++;
-        loadCoverForCard(card, token).finally(() => { running--; pump(); });
-      }
-    };
-    const io = new IntersectionObserver(entries => {
-      for (const en of entries) {
-        if (en.isIntersecting) { io.unobserve(en.target); queue.push(en.target); }
-      }
-      pump();
-    }, { rootMargin: "200px" });
-    cards.forEach(c => io.observe(c));
-  }
-
-  const coerceTags = tags => {
-    if (Array.isArray(tags)) return tags.map(t => String(t).trim()).filter(Boolean);
-    if (typeof tags === "string") return tags.split(/[;,]/g).flatMap(p => p.split(/\s+/g)).map(t => t.trim()).filter(Boolean);
-    return [];
+  const coerceTags=tags=>{
+    if(Array.isArray(tags))return tags.map(t=>String(t).trim()).filter(Boolean);
+    if(typeof tags==="string")return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
+    return[];
   };
 
-  function filterByTag(tag) {
-    $("q").value = tag;
-    applyFilter();
-    $("q").focus();
-  }
+  function filterByTag(tag){document.getElementById("q").value=tag;applyFilter();document.getElementById("q").focus();}
 
-  function makeCard(box) {
-    const a = document.createElement("a");
-    a.className = "card";
-    a.href = `box-${box.id}/`;
-    a.dataset.boxid = box.id;
+  function makeCard(box){
+    const a=document.createElement("a");
+    a.className="card";
+    // SPA link format
+    a.href=`box/?id=${box.id}`;
+    a.dataset.boxid=box.id;
 
-    // Cover
-    const cover = document.createElement("div");
-    cover.className = "cover";
-    const placeholder = document.createElement("div");
-    placeholder.className = "cover-placeholder";
-    placeholder.textContent = "📦";
-    const label = document.createElement("div");
-    label.className = "cover-label";
-    label.textContent = `BOX-${box.id}`;
-    cover.appendChild(placeholder);
-    cover.appendChild(label);
+    const cover=document.createElement("div");cover.className="cover";
+    const ph=document.createElement("div");ph.className="cover-placeholder";ph.textContent="📦";
+    const label=document.createElement("div");label.className="cover-label";label.textContent=`BOX-${box.id}`;
+    cover.appendChild(ph);cover.appendChild(label);
 
-    // Body
-    const body = document.createElement("div");
-    body.className = "card-body";
+    const body=document.createElement("div");body.className="card-body";
+    const title=document.createElement("div");title.className="card-title";title.textContent=`BOX-${box.id}`;
+    const note=document.createElement("div");note.className="card-note";note.textContent=box.note||"No description";
+    body.appendChild(title);body.appendChild(note);
 
-    const title = document.createElement("div");
-    title.className = "card-title";
-    title.textContent = `BOX-${box.id}`;
-
-    const note = document.createElement("div");
-    note.className = "card-note";
-    note.textContent = box.note || "No description";
-
-    body.appendChild(title);
-    body.appendChild(note);
-
-    if (box.tags.length) {
-      const tagsWrap = document.createElement("div");
-      tagsWrap.className = "card-tags";
-      box.tags.forEach(tag => {
-        const s = document.createElement("span");
-        s.className = "tag";
-        s.textContent = tag;
-        s.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); filterByTag(tag); });
-        tagsWrap.appendChild(s);
-      });
+    if(box.tags.length){
+      const tagsWrap=document.createElement("div");tagsWrap.className="card-tags";
+      box.tags.forEach(tag=>{const s=document.createElement("span");s.className="tag";s.textContent=tag;
+        s.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();filterByTag(tag);});tagsWrap.appendChild(s);});
       body.appendChild(tagsWrap);
     }
 
-    a.appendChild(cover);
-    a.appendChild(body);
-    a.dataset.search = [`box-${box.id}`, box.id, box.key||"", box.note||"", box.tags.join(" ")].join(" ").toLowerCase();
+    a.appendChild(cover);a.appendChild(body);
+    a.dataset.search=[`box-${box.id}`,box.id,box.key||"",box.note||"",box.tags.join(" ")].join(" ").toLowerCase();
     return a;
   }
 
-  function render(list) {
-    const grid = $("grid");
-    grid.innerHTML = "";
-    list.forEach(b => grid.appendChild(makeCard(b)));
-    $("counter").textContent = `${list.length} boxes`;
-    $("empty").style.display = list.length ? "none" : "block";
+  function render(list){
+    const grid=document.getElementById("grid");grid.innerHTML="";
+    list.forEach(b=>grid.appendChild(makeCard(b)));
+    document.getElementById("counter").textContent=`${list.length} boxes`;
+    document.getElementById("empty").style.display=list.length?"none":"block";
   }
 
-  function applyFilter() {
-    const term = normalize($("q").value);
-    const cards = [...$("grid").querySelectorAll("a.card")];
-    if (!term) {
-      cards.forEach(c => c.style.display = "");
-      $("counter").textContent = `${cards.length} boxes`;
-      $("empty").style.display = "none";
-      return;
-    }
-    let shown = 0;
-    for (const card of cards) {
-      const ok = card.dataset.search.includes(term);
-      card.style.display = ok ? "" : "none";
-      if (ok) shown++;
-    }
-    $("counter").textContent = `${shown} / ${cards.length}`;
-    $("empty").style.display = shown ? "none" : "block";
+  function applyFilter(){
+    const term=normalize(document.getElementById("q").value);
+    const cards=[...document.getElementById("grid").querySelectorAll("a.card")];
+    if(!term){cards.forEach(c=>c.classList.remove("hidden"));document.getElementById("counter").textContent=`${cards.length} boxes`;document.getElementById("empty").style.display="none";return;}
+    let shown=0;
+    for(const card of cards){const ok=card.dataset.search.includes(term);card.classList.toggle("hidden",!ok);if(ok)shown++;}
+    document.getElementById("counter").textContent=`${shown} / ${cards.length}`;
+    document.getElementById("empty").style.display=shown?"none":"block";
+  }
+  document.getElementById("q").addEventListener("input",applyFilter);
+
+  async function loadBoxes(){
+    const res=await fetch("boxes.json",{cache:"no-store"});
+    if(!res.ok)throw new Error("boxes.json not found");
+    const data=await res.json();
+    const boxes=Array.isArray(data.boxes)?data.boxes:[];
+    return boxes.map(r=>({id:pad2(parseInt(r.id,10)),key:(r.key||"").trim(),note:(r.note||""),tags:coerceTags(r.tags)}))
+      .sort((a,b)=>parseInt(a.id,10)-parseInt(b.id,10));
   }
 
-  $("q").addEventListener("input", applyFilter);
-
-  async function loadBoxes() {
-    const res = await fetch("boxes.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("boxes.json not found");
-    const data = await res.json();
-    const boxes = Array.isArray(data.boxes) ? data.boxes : [];
-    return boxes
-      .map(r => ({
-        id: pad2(parseInt(r.id, 10)),
-        key: (r.key||"").trim(),
-        note: (r.note||""),
-        tags: coerceTags(r.tags)
-      }))
-      .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
-  }
-
-  (async () => {
-    try {
-      render(await loadBoxes());
-      setupCoverLazyLoader();
-    } catch {
-      const fb = [];
-      for (let i = 1; i <= 50; i++) fb.push({ id: pad2(i), key: "", note: "", tags: [] });
-      render(fb);
-      setupCoverLazyLoader();
-    }
+  (async()=>{
+    try{render(await loadBoxes());setupCoverLazyLoader();}
+    catch{const fb=[];for(let i=1;i<=50;i++)fb.push({id:pad2(i),key:"",note:"",tags:[]});render(fb);setupCoverLazyLoader();}
   })();
 </script>
 </body>

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="robots" content="noindex" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Box</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#F7F7F5;--surface:#FFFFFF;--surface-2:#F0EFEB;
+      --border:rgba(0,0,0,0.07);--border-strong:rgba(0,0,0,0.13);
+      --text:#0F0F0E;--muted:#787873;--accent:#0F0F0E;--accent-fg:#FFFFFF;
+      --danger:#A32D2D;--danger-bg:#FCEBEB;--danger-border:#F7C1C1;
+      --tag-bg:#EFEFEB;--tag-text:#3C3C38;
+      --radius:16px;--radius-sm:10px;
+      --font:'DM Sans',-apple-system,sans-serif;--mono:'DM Mono',monospace;
+    }
+    @media(prefers-color-scheme:dark){:root{
+      --bg:#111110;--surface:#1C1C1A;--surface-2:#242422;
+      --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.13);
+      --text:#F0EFEB;--muted:#88887F;--accent:#F0EFEB;--accent-fg:#111110;
+      --danger:#F7C1C1;--danger-bg:#501313;--danger-border:#A32D2D;
+      --tag-bg:#2A2A27;--tag-text:#B8B8B0;
+    }}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:900px;margin:0 auto;padding:24px 24px 120px;}
+
+    .header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+    .header-left{min-width:0;}
+    .breadcrumb{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap;}
+    .breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.15s;}
+    .breadcrumb a:hover{color:var(--text);}
+    .breadcrumb-sep{color:var(--border-strong);font-size:11px;}
+    .breadcrumb-current{color:var(--text);font-weight:600;}
+    .header-left h1{font-size:24px;font-weight:600;letter-spacing:-0.4px;margin-bottom:2px;}
+    .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:18px;}
+
+    .pill{font-size:12px;font-family:var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:5px 10px;border-radius:999px;}
+    .pill.ok{color:#3B6D11;background:#EAF3DE;border-color:#C0DD97;}
+    @media(prefers-color-scheme:dark){.pill.ok{color:#C0DD97;background:#173404;border-color:#3B6D11;}}
+
+    .btn{font-family:var(--font);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;transition:opacity 0.15s;white-space:nowrap;text-decoration:none;display:inline-block;}
+    .btn:hover{opacity:0.7;}
+    .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
+    .btn.danger{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border);}
+    .btn.sm{padding:5px 10px;font-size:12px;}
+    .btn.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
+
+    .search-wrap{position:relative;margin-bottom:16px;}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
+    .search-input{font-family:var(--font);font-size:14px;width:100%;padding:10px 14px 10px 36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+    .search-input:focus{border-color:var(--border-strong);}
+    .search-input::placeholder{color:var(--muted);}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+
+    .notes-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none;}
+    .notes-toggle:hover{background:var(--surface-2);}
+    .notes-toggle-left{display:flex;align-items:center;gap:10px;min-width:0;}
+    .notes-toggle-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);flex-shrink:0;}
+    .notes-preview{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .notes-chevron{font-size:12px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;}
+    .notes-body{padding:0 20px 20px;border-top:1px solid var(--border);}
+    .notes-body.hidden{display:none;}
+    .notes-toolbar{display:flex;gap:4px;flex-wrap:wrap;padding:12px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+    .notes-toolbar button{font-family:var(--font);font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;}
+    .notes-toolbar button:hover{opacity:0.7;}
+    .notes-editor{min-height:120px;max-height:320px;overflow-y:auto;outline:none;font-size:14px;line-height:1.65;color:var(--text);padding:4px 0;}
+    .notes-editor:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
+    .notes-editor b,.notes-editor strong{font-weight:700;}
+    .notes-editor i,.notes-editor em{font-style:italic;}
+    .notes-editor ul,.notes-editor ol{padding-left:20px;}
+    .notes-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+    .notes-status{font-size:12px;color:var(--muted);font-family:var(--mono);}
+    .boxtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+    .boxtag{font-size:11px;font-weight:500;color:var(--tag-text);background:var(--tag-bg);padding:3px 9px;border-radius:999px;}
+
+    .files-card-body{padding:20px;}
+    .dropzone{border:1.5px dashed var(--border-strong);border-radius:var(--radius-sm);padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;margin-bottom:14px;}
+    .dropzone:hover,.dropzone.hover{background:var(--surface-2);border-color:var(--text);color:var(--text);}
+    .dropzone-icon{font-size:16px;margin-bottom:3px;}
+
+    .files-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+    .files-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .files-title{font-size:14px;font-weight:600;}
+    .files-actions{display:flex;gap:6px;flex-wrap:wrap;}
+    .view-toggle{display:flex;gap:4px;}
+
+    .select-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;margin-bottom:8px;border-bottom:1px solid var(--border);}
+    .select-toolbar.hidden{display:none;}
+    .select-count{font-size:13px;color:var(--muted);font-family:var(--mono);}
+
+    .fileRow{display:grid;grid-template-columns:20px 44px minmax(0,1fr) 36px;align-items:start;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:2px;transition:background 0.1s;position:relative;}
+    .fileRow:hover{background:var(--surface-2);}
+    .fileRow.selected{background:var(--surface-2);}
+    .fileRow.hidden{display:none;}
+
+    .fileCheck{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:13px;}
+    .fileThumb{width:44px;height:44px;border-radius:8px;overflow:visible;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative;}
+    .fileThumb.clickable{cursor:pointer;}
+    .fileThumb img.thumb-img{width:44px;height:44px;object-fit:cover;border-radius:8px;display:block;}
+    @media(hover:hover){.fileThumb:hover .thumbPopup{opacity:1;}}
+    .thumbPopup{position:fixed;z-index:9000;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+    .thumbPopup img{width:300px;height:300px;object-fit:contain;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);box-shadow:0 12px 40px rgba(0,0,0,0.2);}
+
+    .fileMain{min-width:0;padding:2px 0;}
+    .fileName{font-size:14px;font-weight:500;line-height:1.4;overflow-wrap:break-word;word-break:break-word;color:var(--text);}
+    .fileMeta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+    .fileCaption{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4;word-break:break-word;}
+    .fileTags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+    .fileTag{font-size:11px;color:var(--tag-text);background:var(--tag-bg);padding:2px 8px;border-radius:999px;font-weight:500;}
+
+    .fileActions{position:absolute;right:44px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1);z-index:10;}
+    .fileRow:hover .fileActions{display:flex;}
+    .fileActionBtn{width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);transition:background 0.1s,color 0.1s;}
+    .fileActionBtn:hover{background:var(--surface-2);color:var(--text);}
+    .fileActionBtn.del:hover{background:var(--danger-bg);color:var(--danger);}
+
+    .editModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:8000;padding:16px;}
+    .editModal.hidden{display:none;}
+    .editCard{width:min(480px,100%);background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;overflow:hidden;}
+    .editHead{padding:20px 20px 14px;border-bottom:1px solid var(--border);}
+    .editTitle{font-size:16px;font-weight:600;margin-bottom:2px;}
+    .editSubtitle{font-size:12px;color:var(--muted);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .editBody{padding:16px 20px;}
+    .editLabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:6px;}
+    .editInput{font-family:var(--font);font-size:14px;width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);outline:none;margin-bottom:14px;}
+    .editInput:focus{border-color:var(--text);}
+    .editFoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+    .menuBtn{width:32px;height:32px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;flex-shrink:0;transition:background 0.15s;margin-top:6px;}
+    .menuBtn:hover{background:var(--border);}
+
+    .ctxMenu{position:fixed;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:8000;min-width:160px;padding:4px 0;}
+    .ctxItem{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;cursor:pointer;color:var(--text);transition:background 0.1s;font-family:var(--font);}
+    .ctxItem:hover{background:var(--surface-2);}
+    .ctxItem.danger{color:var(--danger);}
+    .ctxDivider{height:1px;background:var(--border);margin:4px 0;}
+
+    #files.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+    #files.grid-view .fileRow{display:flex;flex-direction:column;align-items:center;padding:12px 10px;gap:6px;border-radius:var(--radius-sm);position:relative;cursor:pointer;margin-bottom:0;}
+    #files.grid-view .fileCheck{position:absolute;top:8px;left:8px;z-index:10;margin-top:0;}
+    #files.grid-view .fileThumb{width:100%;height:120px;border-radius:10px;font-size:36px;overflow:visible;}
+    #files.grid-view .fileThumb img.thumb-img{width:100%;height:120px;object-fit:cover;border-radius:10px;}
+    #files.grid-view .thumbPopup{display:none;}
+    @media(hover:hover){#files.grid-view .thumbPopup{display:block;}}
+    #files.grid-view .fileMain{width:100%;text-align:center;min-width:0;}
+    #files.grid-view .fileName{font-size:12px;font-weight:500;overflow-wrap:break-word;word-break:break-word;line-height:1.35;}
+    #files.grid-view .fileMeta{font-size:10px;text-align:center;}
+    #files.grid-view .fileCaption{font-size:11px;text-align:center;}
+    #files.grid-view .fileTags{justify-content:center;}
+    #files.grid-view .fileActions{top:8px;right:8px;transform:none;}
+    #files.grid-view .menuBtn{position:absolute;top:4px;right:4px;width:28px;height:28px;background:rgba(0,0,0,0.35);color:#fff;border-radius:50%;font-size:14px;margin-top:0;}
+    #files.grid-view .menuBtn:hover{background:rgba(0,0,0,0.55);}
+
+    .progRow{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);margin-bottom:6px;}
+    .progHeader{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;}
+    .progName{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .progMeta{font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0;}
+    .progBar{height:3px;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+    .progFill{height:100%;background:var(--accent);width:0%;transition:width 0.2s;border-radius:999px;}
+    .progPct{font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right;margin-top:3px;}
+
+    #status{font-size:13px;color:var(--muted);margin-top:2px;}
+    #empty{color:var(--muted);font-size:13px;display:none;padding:20px 0;text-align:center;}
+    .heic-loading{font-size:11px;color:var(--muted);font-family:var(--mono);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border-radius:8px;}
+
+    .action-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--accent-fg);border-radius:999px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);transition:transform 0.25s cubic-bezier(.34,1.56,.64,1);z-index:500;white-space:nowrap;}
+    .action-bar.visible{transform:translateX(-50%) translateY(0);}
+    .action-bar-count{font-size:13px;font-weight:600;}
+    .action-bar-divider{width:1px;height:16px;background:rgba(255,255,255,0.2);}
+    .action-bar-btn{font-family:var(--font);font-size:13px;font-weight:500;background:transparent;border:none;cursor:pointer;padding:0;transition:opacity 0.15s;color:rgba(255,255,255,0.85);}
+    .action-bar-btn:hover{opacity:0.7;}
+    .action-bar-btn.del{color:#FF8080;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <a href="https://home.1000600.xyz">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html">All Boxes</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current" id="breadcrumbCurrent">BOX</span>
+      </div>
+      <h1 id="boxTitle">BOX</h1>
+      <div id="status">Loading…</div>
+    </div>
+    <div class="header-right">
+      <span class="pill" id="authPill">Auth: …</span>
+      <button class="btn" id="logoutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" id="searchInput" type="search" placeholder="Search files, captions, tags, notes…" autocomplete="off" />
+  </div>
+
+  <div class="card" id="notesCard">
+    <div class="notes-toggle" id="notesToggle" onclick="toggleNotes()">
+      <div class="notes-toggle-left">
+        <span class="notes-toggle-title">Notes</span>
+        <span class="notes-preview" id="notesPreview">Click to expand…</span>
+      </div>
+      <span class="notes-chevron" id="notesChevron">›</span>
+    </div>
+    <div class="notes-body hidden" id="notesBody">
+      <div class="notes-toolbar">
+        <button onclick="fmt('bold')"><b>B</b></button>
+        <button onclick="fmt('italic')"><i>I</i></button>
+        <button onclick="fmt('underline')"><u>U</u></button>
+        <button onclick="fmt('insertUnorderedList')">• List</button>
+        <button onclick="fmt('insertOrderedList')">1. List</button>
+        <button onclick="insertEmoji()">😊</button>
+        <button onclick="document.execCommand('removeFormat')">Clear</button>
+      </div>
+      <div class="notes-editor" id="notesEditor" contenteditable="true" data-placeholder="Add notes about what's in this box…"></div>
+      <div class="notes-footer">
+        <span class="notes-status" id="notesStatus">—</span>
+        <button class="btn primary sm" id="saveNoteBtn">Save note</button>
+      </div>
+      <div class="boxtags" id="boxtags"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="files-card-body">
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">⬆</div>
+        Drop files here to upload
+      </div>
+      <div id="uploadProgress" style="display:none"></div>
+      <div class="files-header">
+        <div class="files-left">
+          <div class="files-title">Files</div>
+          <div class="view-toggle">
+            <button class="btn sm active" id="btnList" onclick="setView('list')" title="List">☰</button>
+            <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid">⊞</button>
+          </div>
+        </div>
+        <div class="files-actions">
+          <input id="fileIn" type="file" style="display:none" multiple />
+          <button class="btn primary" id="uploadBtn">Upload</button>
+          <button class="btn" id="refreshBtn">Refresh</button>
+          <button class="btn danger" id="clearBtn">Clear all</button>
+        </div>
+      </div>
+      <div class="select-toolbar hidden" id="selectToolbar">
+        <button class="btn sm" id="selectAllBtn">Select all</button>
+        <button class="btn sm" id="deselectAllBtn">Deselect all</button>
+        <span class="select-count" id="selectCount">0 selected</span>
+      </div>
+      <div id="files" class="list-view"></div>
+      <div id="empty">No files yet. Upload photos, videos, or documents.</div>
+    </div>
+  </div>
+</div>
+
+<div class="editModal hidden" id="editModal">
+  <div class="editCard">
+    <div class="editHead">
+      <div class="editTitle">Edit file info</div>
+      <div class="editSubtitle" id="editFilename">—</div>
+    </div>
+    <div class="editBody">
+      <div class="editLabel">Caption</div>
+      <input class="editInput" id="editCaption" type="text" placeholder="Add a caption…" />
+      <div class="editLabel">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma separated)</span></div>
+      <input class="editInput" id="editTags" type="text" placeholder="e.g. winter, clothes, fragile" />
+    </div>
+    <div class="editFoot">
+      <button class="btn" id="editCancel">Cancel</button>
+      <button class="btn primary" id="editSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="editModal hidden" id="bulkTagModal">
+  <div class="editCard">
+    <div class="editHead"><div class="editTitle">Add tags to selected files</div></div>
+    <div class="editBody">
+      <div class="editLabel">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma separated)</span></div>
+      <input class="editInput" id="bulkTagInput" type="text" placeholder="e.g. winter, fragile" />
+    </div>
+    <div class="editFoot">
+      <button class="btn" id="bulkTagCancel">Cancel</button>
+      <button class="btn primary" id="bulkTagSave">Apply tags</button>
+    </div>
+  </div>
+</div>
+
+<div class="action-bar" id="actionBar">
+  <span class="action-bar-count" id="actionCount">0 selected</span>
+  <div class="action-bar-divider"></div>
+  <button class="action-bar-btn" id="actionTag">Tag</button>
+  <div class="action-bar-divider"></div>
+  <button class="action-bar-btn del" id="actionDelete">Delete</button>
+  <div class="action-bar-divider"></div>
+  <button class="action-bar-btn" id="actionCancel">Cancel</button>
+</div>
+
+<script>
+  function fmt(cmd){document.execCommand(cmd,false,null);document.getElementById("notesEditor").focus();}
+  function insertEmoji(){var e=["📦","✅","❌","⚠️","🔑","📷","🎬","📄","🗂️","🏠","🛋️","👕","📚","🧸","🔧","💡","🎮","🍳","❄️","🌿"];document.execCommand("insertText",false,e[Math.floor(Math.random()*e.length)]);document.getElementById("notesEditor").focus();}
+  document.getElementById("dropzone").addEventListener("click",function(){document.getElementById("fileIn").click();});
+  var notesOpen=false;
+  function toggleNotes(){notesOpen=!notesOpen;document.getElementById("notesBody").classList.toggle("hidden",!notesOpen);document.getElementById("notesChevron").style.transform=notesOpen?"rotate(90deg)":"";}
+  function updateNotesPreview(){var e=document.getElementById("notesEditor"),p=document.getElementById("notesPreview");if(!e||!p)return;var t=(e.innerText||e.textContent||"").trim().replace(/\s+/g," ");p.textContent=t?(t.length>60?t.slice(0,60)+"…":t):"Click to expand…";}
+  var currentView=localStorage.getItem("boxView")||"list";
+  function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
+  setView(currentView);
+</script>
+<script src="../box.js"></script>
+</body>
+</html>
