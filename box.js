@@ -1,4 +1,4 @@
-// box.js v5 - grid/list view + HEIC preview
+// box.js v6 - multiselect + batch delete + HEIC + grid/list
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
@@ -128,24 +128,18 @@ function fileIcon(name) {
   var map = {jpg:"🖼",jpeg:"🖼",png:"🖼",gif:"🖼",webp:"🖼",heic:"🖼",avif:"🖼",mp4:"🎬",mov:"🎬",m4v:"🎬",webm:"🎬",mp3:"🎵",m4a:"🎵",aac:"🎵",wav:"🎵",flac:"🎵",ogg:"🎵",pdf:"📄",doc:"📝",docx:"📝",xls:"📊",xlsx:"📊",csv:"📊",zip:"🗜",rar:"🗜",gz:"🗜",json:"⚙",js:"⚙",html:"🌐",css:"🎨",txt:"📃"};
   return map[ext] || "📎";
 }
-function isImageExt(ext) {
-  return ["jpg","jpeg","png","gif","webp","avif","heic"].indexOf(ext) >= 0;
-}
+function isImageExt(ext) { return ["jpg","jpeg","png","gif","webp","avif","heic"].indexOf(ext) >= 0; }
 function isHeicExt(ext) { return ext === "heic"; }
 
-// Convert HEIC blob to object URL using heic2any
 var heicCache = {};
 function loadHeicUrl(fileUrl) {
   if (heicCache[fileUrl]) return Promise.resolve(heicCache[fileUrl]);
   return fetch(fileUrl)
     .then(function(res) { return res.blob(); })
-    .then(function(blob) {
-      return window.heic2any({ blob: blob, toType: "image/jpeg", quality: 0.7 });
-    })
+    .then(function(blob) { return window.heic2any({ blob: blob, toType: "image/jpeg", quality: 0.75 }); })
     .then(function(converted) {
       var url = URL.createObjectURL(converted);
-      heicCache[fileUrl] = url;
-      return url;
+      heicCache[fileUrl] = url; return url;
     });
 }
 
@@ -159,10 +153,7 @@ function loadNote() {
   var status = $("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID, TOKEN), { cache: "no-store" })
     .then(function(res) { return res.ok ? res.text() : ""; })
-    .then(function(html) {
-      el.innerHTML = html || "";
-      if (status) status.textContent = html ? "Note loaded" : "No note yet";
-    })
+    .then(function(html) { el.innerHTML = html || ""; if (status) status.textContent = html ? "Note loaded" : "No note yet"; })
     .catch(function() { if (status) status.textContent = "Could not load note"; });
 }
 
@@ -172,45 +163,54 @@ function saveNote() {
   if (btn) btn.disabled = true;
   if (status) status.textContent = "Saving...";
   return fetch(mediaNotePostUrl(BOX_ID, TOKEN), {
-    method: "POST",
-    headers: { "Content-Type": "text/html; charset=utf-8" },
-    body: el.innerHTML
-  }).then(function(res) {
-    if (status) status.textContent = res.ok ? "Saved" : "Save failed";
-  }).catch(function() {
-    if (status) status.textContent = "Save failed";
-  }).then(function() { if (btn) btn.disabled = false; });
+    method: "POST", headers: { "Content-Type": "text/html; charset=utf-8" }, body: el.innerHTML
+  }).then(function(res) { if (status) status.textContent = res.ok ? "Saved" : "Save failed"; })
+  .catch(function() { if (status) status.textContent = "Save failed"; })
+  .then(function() { if (btn) btn.disabled = false; });
+}
+
+// ── Selection state ──
+var selectedFiles = {};
+
+function updateActionBar() {
+  var keys = Object.keys(selectedFiles);
+  var bar = $("actionBar");
+  var count = $("actionCount");
+  if (keys.length > 0) {
+    count.textContent = keys.length + " selected";
+    bar.classList.add("visible");
+  } else {
+    bar.classList.remove("visible");
+  }
+}
+
+function clearSelection() {
+  selectedFiles = {};
+  document.querySelectorAll(".fileCheck").forEach(function(cb) { cb.checked = false; });
+  document.querySelectorAll(".fileRow").forEach(function(r) { r.classList.remove("selected"); });
+  updateActionBar();
 }
 
 function makeThumb(name, ext, fileUrl) {
   var wrap = document.createElement("div");
   wrap.className = "fileThumb";
-
   if (isImageExt(ext)) {
+    wrap.classList.add("clickable");
     if (isHeicExt(ext)) {
-      // Show spinner, then convert
       var spinner = document.createElement("div");
-      spinner.className = "heic-loading";
-      spinner.textContent = "HEIC...";
+      spinner.className = "heic-loading"; spinner.textContent = "HEIC...";
       wrap.appendChild(spinner);
       loadHeicUrl(fileUrl).then(function(url) {
         wrap.innerHTML = "";
-        var img = document.createElement("img");
-        img.src = url; img.alt = name; img.className = "thumb-img";
+        var img = document.createElement("img"); img.src = url; img.alt = name; img.className = "thumb-img";
         wrap.appendChild(img);
-        var popup = makePopup(url);
-        wrap.appendChild(popup);
+        var popup = makePopup(url); wrap.appendChild(popup);
         wrap.onclick = function(e) { e.stopPropagation(); window.open(url, "_blank"); };
-      }).catch(function() {
-        wrap.innerHTML = "🖼";
-      });
+      }).catch(function() { wrap.innerHTML = "🖼"; });
     } else {
-      var img = document.createElement("img");
-      img.src = fileUrl; img.alt = name; img.className = "thumb-img"; img.loading = "lazy";
+      var img = document.createElement("img"); img.src = fileUrl; img.alt = name; img.className = "thumb-img"; img.loading = "lazy";
       wrap.appendChild(img);
-      var popup = makePopup(fileUrl);
-      wrap.appendChild(popup);
-      wrap.style.cursor = "pointer";
+      var popup = makePopup(fileUrl); wrap.appendChild(popup);
       wrap.onclick = function(e) { e.stopPropagation(); window.open(fileUrl, "_blank"); };
     }
   } else {
@@ -220,17 +220,15 @@ function makeThumb(name, ext, fileUrl) {
 }
 
 function makePopup(imgUrl) {
-  var popup = document.createElement("div");
-  popup.className = "thumbPopup";
-  var popImg = document.createElement("img");
-  popImg.src = imgUrl; popImg.alt = "";
-  popup.appendChild(popImg);
-  return popup;
+  var popup = document.createElement("div"); popup.className = "thumbPopup";
+  var popImg = document.createElement("img"); popImg.src = imgUrl; popImg.alt = "";
+  popup.appendChild(popImg); return popup;
 }
 
 function refreshList() {
   $("files").innerHTML = "";
   $("empty").style.display = "none";
+  selectedFiles = {}; updateActionBar();
   setStatus("Loading files...");
   return fetch(mediaListUrl(BOX_ID, TOKEN), { cache: "no-store" })
     .then(function(res) {
@@ -249,6 +247,14 @@ function refreshList() {
         var ext = name.split(".").pop().toLowerCase();
         var fileUrl = mediaFileUrl(BOX_ID, name, TOKEN);
         var row = document.createElement("div"); row.className = "fileRow";
+
+        // Checkbox
+        var cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "fileCheck";
+        cb.addEventListener("change", function() {
+          if (cb.checked) { selectedFiles[name] = true; row.classList.add("selected"); }
+          else { delete selectedFiles[name]; row.classList.remove("selected"); }
+          updateActionBar();
+        });
 
         var thumb = makeThumb(name, ext, fileUrl);
 
@@ -270,10 +276,26 @@ function refreshList() {
             .catch(handleErr);
         };
         btns.appendChild(openBtn); btns.appendChild(delBtn);
-        row.appendChild(thumb); row.appendChild(mainDiv); row.appendChild(btns);
+        row.appendChild(cb); row.appendChild(thumb); row.appendChild(mainDiv); row.appendChild(btns);
         $("files").appendChild(row);
       });
     });
+}
+
+function deleteSelected() {
+  var names = Object.keys(selectedFiles);
+  if (names.length === 0) return;
+  if (!confirm("Delete " + names.length + " selected file(s)? This cannot be undone.")) return;
+  setStatus("Deleting " + names.length + " files...");
+  $("actionBar").classList.remove("visible");
+  var chain = Promise.resolve();
+  names.forEach(function(name) {
+    chain = chain.then(function() {
+      return fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method: "DELETE" })
+        .then(function(resp) { if (resp.status === 401) throw new Error("unauthorized"); });
+    });
+  });
+  chain.then(function() { return refreshList(); }).catch(handleErr);
 }
 
 function uploadFiles(files) {
@@ -333,6 +355,8 @@ function wireButtons() {
       .then(function(res) { if(res.status===401) throw new Error("unauthorized"); if(!res.ok) alert("Clear failed."); return refreshList(); })
       .catch(handleErr);
   };
+  $("actionDelete").onclick = function() { deleteSelected(); };
+  $("actionCancel").onclick = function() { clearSelection(); };
 }
 
 function handleErr(e) {
