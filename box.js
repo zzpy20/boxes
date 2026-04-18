@@ -1,14 +1,14 @@
-// box.js v3
+// box.js v4 - thumbnail hover preview
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
 
 function getBoxIdFromPath() {
-  const m = location.pathname.match(/box-(\d{2})\/?$/i);
+  var m = location.pathname.match(/box-(\d{2})\/?$/i);
   return m ? m[1] : null;
 }
 async function loadBoxesJson() {
-  const res = await fetch("../boxes.json", { cache: "no-store" });
+  var res = await fetch("../boxes.json", { cache: "no-store" });
   if (!res.ok) throw new Error("boxes.json not found");
   return await res.json();
 }
@@ -18,57 +18,41 @@ function clearToken() { try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catc
 function baseUrl() { return WORKER_BASE.endsWith("/") ? WORKER_BASE : (WORKER_BASE + "/"); }
 
 function workerCheckUrl(kvKey, token) {
-  const u = new URL(baseUrl() + encodeURIComponent(kvKey));
-  u.searchParams.set(TOKEN_PARAM, token);
-  u.searchParams.set("check", "1");
-  return u.toString();
-}
-function workerRedirectUrl(kvKey, token) {
-  const u = new URL(baseUrl() + encodeURIComponent(kvKey));
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + encodeURIComponent(kvKey));
+  u.searchParams.set(TOKEN_PARAM, token); u.searchParams.set("check", "1"); return u.toString();
 }
 function mediaListUrl(boxId, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/list");
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/list");
+  u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaNoteGetUrl(boxId, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/note");
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/note");
+  u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaNotePostUrl(boxId, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/note");
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/note");
+  u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaUploadUrl(boxId, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/upload");
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/upload");
+  u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaClearUrl(boxId, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId);
-  u.searchParams.set("all", "1");
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId);
+  u.searchParams.set("all", "1"); u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaDeleteOneUrl(boxId, filename, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/file");
-  u.searchParams.set("name", filename);
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/file");
+  u.searchParams.set("name", filename); u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 function mediaFileUrl(boxId, filename, token) {
-  const u = new URL(baseUrl() + "media/box-" + boxId + "/" + encodeURIComponent(filename));
-  u.searchParams.set(TOKEN_PARAM, token);
-  return u.toString();
+  var u = new URL(baseUrl() + "media/box-" + boxId + "/" + encodeURIComponent(filename));
+  u.searchParams.set(TOKEN_PARAM, token); return u.toString();
 }
 
 function ensureModal() {
   if (document.getElementById("authOverlay")) return;
-  const overlay = document.createElement("div");
+  var overlay = document.createElement("div");
   overlay.id = "authOverlay";
   overlay.innerHTML = [
     "<style>",
@@ -111,28 +95,19 @@ function showModal(opts) {
   var input = document.getElementById("authInput");
   var btn = document.getElementById("authBtn");
   var err = document.getElementById("authErr");
-  err.style.display = "none";
-  overlay.style.display = "flex";
-  input.value = "";
+  err.style.display = "none"; overlay.style.display = "flex"; input.value = "";
   setTimeout(function() { input.focus(); }, 50);
   function submit() {
-    var token = (input.value || "").trim();
-    if (!token) return;
+    var token = (input.value || "").trim(); if (!token) return;
     btn.disabled = true;
     onSubmit(token).then(function() { hideModal(); }).catch(function() {
-      err.style.display = "block";
-      btn.disabled = false;
-      input.select();
+      err.style.display = "block"; btn.disabled = false; input.select();
     });
   }
   btn.onclick = submit;
   input.onkeydown = function(e) { if (e.key === "Enter") submit(); };
 }
-
-function hideModal() {
-  var o = document.getElementById("authOverlay");
-  if (o) o.style.display = "none";
-}
+function hideModal() { var o = document.getElementById("authOverlay"); if (o) o.style.display = "none"; }
 
 var BOX_ID = null, KV_KEY = null, TOKEN = null;
 function $(id) { return document.getElementById(id); }
@@ -153,6 +128,9 @@ function fileIcon(name) {
   var map = {jpg:"🖼",jpeg:"🖼",png:"🖼",gif:"🖼",webp:"🖼",heic:"🖼",avif:"🖼",mp4:"🎬",mov:"🎬",m4v:"🎬",webm:"🎬",mp3:"🎵",m4a:"🎵",aac:"🎵",wav:"🎵",flac:"🎵",ogg:"🎵",pdf:"📄",doc:"📝",docx:"📝",xls:"📊",xlsx:"📊",csv:"📊",zip:"🗜",rar:"🗜",gz:"🗜",json:"⚙",js:"⚙",html:"🌐",css:"🎨",txt:"📃"};
   return map[ext] || "📎";
 }
+function isImageExt(ext) {
+  return ["jpg","jpeg","png","gif","webp","avif"].indexOf(ext) >= 0;
+}
 
 function checkToken(kvKey, token) {
   return fetch(workerCheckUrl(kvKey, token), { method: "GET", cache: "no-store" })
@@ -160,14 +138,10 @@ function checkToken(kvKey, token) {
 }
 
 function loadNote() {
-  var el = $("notesEditor");
-  if (!el) return Promise.resolve();
+  var el = $("notesEditor"); if (!el) return Promise.resolve();
   var status = $("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID, TOKEN), { cache: "no-store" })
-    .then(function(res) {
-      if (res.ok) return res.text();
-      return "";
-    })
+    .then(function(res) { return res.ok ? res.text() : ""; })
     .then(function(html) {
       el.innerHTML = html || "";
       if (status) status.textContent = html ? "Note loaded" : "No note yet";
@@ -176,10 +150,8 @@ function loadNote() {
 }
 
 function saveNote() {
-  var el = $("notesEditor");
-  if (!el) return Promise.resolve();
-  var status = $("notesStatus");
-  var btn = $("saveNoteBtn");
+  var el = $("notesEditor"); if (!el) return Promise.resolve();
+  var status = $("notesStatus"), btn = $("saveNoteBtn");
   if (btn) btn.disabled = true;
   if (status) status.textContent = "Saving...";
   return fetch(mediaNotePostUrl(BOX_ID, TOKEN), {
@@ -190,60 +162,36 @@ function saveNote() {
     if (status) status.textContent = res.ok ? "Saved" : "Save failed";
   }).catch(function() {
     if (status) status.textContent = "Save failed";
-  }).then(function() {
-    if (btn) btn.disabled = false;
-  });
+  }).then(function() { if (btn) btn.disabled = false; });
 }
 
-var activeFileRow = null;
-function showPreview(name, fileUrl, ext) {
-  var body = $("previewBody");
-  var filename = $("previewFilename");
-  if (filename) filename.textContent = name;
-  body.innerHTML = "";
-  var isImg = ["jpg","jpeg","png","gif","webp","avif"].indexOf(ext) >= 0;
-  var isHeic = ext === "heic";
-  var isVid = ["mp4","mov","m4v","webm"].indexOf(ext) >= 0;
-  var isAud = ["mp3","m4a","aac","wav","flac","ogg"].indexOf(ext) >= 0;
-  var isPdf = ext === "pdf";
+function makeThumb(name, ext, fileUrl) {
   var wrap = document.createElement("div");
-  wrap.style.padding = "16px";
-  if (isImg) {
+  wrap.className = "fileThumb";
+  if (isImageExt(ext)) {
     var img = document.createElement("img");
-    img.src = fileUrl; img.alt = name; img.className = "previewImg";
+    img.src = fileUrl; img.alt = name; img.loading = "lazy";
     wrap.appendChild(img);
-  } else if (isHeic) {
-    var p = document.createElement("div"); p.className = "previewHint";
-    p.innerHTML = "HEIC files cannot be previewed in Chrome.<br>Open in Safari or download.";
-    wrap.appendChild(p);
-    var a = document.createElement("a"); a.href = fileUrl; a.target = "_blank"; a.rel = "noreferrer";
-    a.className = "btn"; a.style.marginTop = "12px"; a.textContent = "Download HEIC";
-    wrap.appendChild(a);
-  } else if (isVid) {
-    var v = document.createElement("video"); v.controls = true; v.playsInline = true; v.className = "previewMedia";
-    var s = document.createElement("source"); s.src = fileUrl; v.appendChild(s); wrap.appendChild(v);
-  } else if (isAud) {
-    var au = document.createElement("audio"); au.controls = true; au.className = "previewMedia";
-    var sa = document.createElement("source"); sa.src = fileUrl; au.appendChild(sa); wrap.appendChild(au);
-  } else if (isPdf) {
-    var iframe = document.createElement("iframe"); iframe.src = fileUrl; iframe.className = "previewFrame";
-    wrap.appendChild(iframe);
+    // hover popup
+    var popup = document.createElement("div");
+    popup.className = "thumbPopup";
+    var popImg = document.createElement("img");
+    popImg.src = fileUrl; popImg.alt = name;
+    popup.appendChild(popImg);
+    wrap.appendChild(popup);
+    // click = open
+    wrap.style.cursor = "pointer";
+    wrap.onclick = function(e) { e.stopPropagation(); window.open(fileUrl, "_blank"); };
   } else {
-    var ph = document.createElement("div"); ph.className = "previewHint";
-    ph.innerHTML = "This file type cannot be previewed inline.<br><br>";
-    var al = document.createElement("a"); al.href = fileUrl; al.target = "_blank"; al.rel = "noreferrer";
-    al.className = "btn"; al.textContent = "Open / Download"; ph.appendChild(al); wrap.appendChild(ph);
+    wrap.textContent = fileIcon(name);
   }
-  body.appendChild(wrap);
+  return wrap;
 }
 
 function refreshList() {
   $("files").innerHTML = "";
   $("empty").style.display = "none";
   setStatus("Loading files...");
-  activeFileRow = null;
-  $("previewBody").innerHTML = "<div class='preview-empty'>Select a file to preview</div>";
-  var fn = $("previewFilename"); if (fn) fn.textContent = "—";
   return fetch(mediaListUrl(BOX_ID, TOKEN), { cache: "no-store" })
     .then(function(res) {
       if (res.status === 401) throw new Error("unauthorized");
@@ -252,39 +200,38 @@ function refreshList() {
     })
     .then(function(arr) {
       if (!Array.isArray(arr) || arr.length === 0) {
-        $("empty").style.display = "block";
-        setStatus("No files in this box.");
-        return;
+        $("empty").style.display = "block"; setStatus("No files in this box."); return;
       }
       setStatus(arr.length + " file" + (arr.length === 1 ? "" : "s"));
       arr.sort(function(a, b) { return (a.name || "").localeCompare(b.name || ""); });
       arr.forEach(function(it) {
-        var row = document.createElement("div"); row.className = "fileRow";
         var name = it.name || "";
         var ext = name.split(".").pop().toLowerCase();
         var fileUrl = mediaFileUrl(BOX_ID, name, TOKEN);
-        row.innerHTML = "<div class='fileIcon'>" + fileIcon(name) + "</div>" +
-          "<div class='fileMain'><div class='fileName'>" + name + "</div>" +
-          "<div class='fileMeta'>" + fmtBytes(it.size) + (it.lastModified ? " · " + fmtDate(it.lastModified) : "") + "</div></div>" +
-          "<div class='fileBtns'><a class='btn sm' href='" + fileUrl + "' target='_blank' rel='noreferrer'>Open</a>" +
-          "<button class='btn sm danger' data-act='del'>Delete</button></div>";
-        row.addEventListener("click", function(e) {
-          if (e.target.closest("[data-act]") || e.target.closest("a")) return;
-          if (activeFileRow) activeFileRow.classList.remove("active");
-          row.classList.add("active"); activeFileRow = row;
-          showPreview(name, fileUrl, ext);
-        });
-        row.querySelector("[data-act='del']").onclick = function(e) {
+        var row = document.createElement("div"); row.className = "fileRow";
+
+        var thumb = makeThumb(name, ext, fileUrl);
+
+        var mainDiv = document.createElement("div"); mainDiv.className = "fileMain";
+        var nameDiv = document.createElement("div"); nameDiv.className = "fileName"; nameDiv.textContent = name;
+        var metaDiv = document.createElement("div"); metaDiv.className = "fileMeta";
+        metaDiv.textContent = fmtBytes(it.size) + (it.lastModified ? " · " + fmtDate(it.lastModified) : "");
+        mainDiv.appendChild(nameDiv); mainDiv.appendChild(metaDiv);
+
+        var btns = document.createElement("div"); btns.className = "fileBtns";
+        var openBtn = document.createElement("a"); openBtn.className = "btn sm"; openBtn.href = fileUrl; openBtn.target = "_blank"; openBtn.rel = "noreferrer"; openBtn.textContent = "Open";
+        var delBtn = document.createElement("button"); delBtn.className = "btn sm danger"; delBtn.textContent = "Delete";
+        delBtn.onclick = function(e) {
           e.stopPropagation();
           if (!confirm("Delete \"" + name + "\"?")) return;
           setStatus("Deleting...");
           fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method: "DELETE" })
-            .then(function(resp) {
-              if (resp.status === 401) throw new Error("unauthorized");
-              if (!resp.ok) { alert("Delete failed."); }
-              return refreshList();
-            }).catch(handleErr);
+            .then(function(resp) { if (resp.status === 401) throw new Error("unauthorized"); if (!resp.ok) alert("Delete failed."); return refreshList(); })
+            .catch(handleErr);
         };
+        btns.appendChild(openBtn); btns.appendChild(delBtn);
+
+        row.appendChild(thumb); row.appendChild(mainDiv); row.appendChild(btns);
         $("files").appendChild(row);
       });
     });
@@ -293,8 +240,8 @@ function refreshList() {
 function uploadFiles(files) {
   if (!files || files.length === 0) return Promise.resolve();
   var maxBodyBytes = 95 * 1024 * 1024;
-  var tooBig = Array.prototype.find.call(files, function(f) { return f && f.size > maxBodyBytes; });
-  if (tooBig) { alert("File too large: " + tooBig.name + "\n" + fmtBytes(tooBig.size) + " — max 95 MB"); return Promise.resolve(); }
+  var tooBig = Array.prototype.find ? Array.prototype.find.call(files, function(f) { return f && f.size > maxBodyBytes; }) : null;
+  if (tooBig) { alert("File too large: " + tooBig.name + " — max 95 MB"); return Promise.resolve(); }
   var progHost = $("uploadProgress"); progHost.innerHTML = ""; progHost.style.display = "block";
   var items = Array.prototype.map.call(files, function(f) {
     var row = document.createElement("div"); row.className = "progRow";
@@ -311,8 +258,8 @@ function uploadFiles(files) {
         var fd = new FormData(); fd.append("files", it.f, it.f.name);
         var xhr = new XMLHttpRequest(); xhr.open("POST", mediaUploadUrl(BOX_ID, TOKEN), true);
         xhr.upload.onprogress = function(e) { if (e.lengthComputable) { var p = Math.round(e.loaded/e.total*100); it.fill.style.width=p+"%"; it.pct.textContent=p+"%"; } };
-        xhr.onload = function() { if (xhr.status===401){reject(new Error("unauthorized"));return;} if(xhr.status>=200&&xhr.status<300){it.fill.style.width="100%";it.pct.textContent="100%";resolve();}else{alert("Upload failed: "+it.f.name);resolve();} };
-        xhr.onerror = function() { alert("Network error: "+it.f.name); resolve(); };
+        xhr.onload = function() { if(xhr.status===401){reject(new Error("unauthorized"));return;} if(xhr.status>=200&&xhr.status<300){it.fill.style.width="100%";it.pct.textContent="100%";resolve();}else{alert("Upload failed: "+it.f.name);resolve();} };
+        xhr.onerror = function() { alert("Network error: " + it.f.name); resolve(); };
         xhr.send(fd);
       });
     });
@@ -320,9 +267,7 @@ function uploadFiles(files) {
   return chain.then(function() {
     $("uploadBtn").disabled = false; $("fileIn").disabled = false; $("fileIn").value = "";
     return refreshList();
-  }).then(function() {
-    setTimeout(function() { progHost.style.display = "none"; }, 800);
-  });
+  }).then(function() { setTimeout(function() { progHost.style.display = "none"; }, 800); });
 }
 
 function wireDropzone() {
@@ -345,7 +290,7 @@ function wireButtons() {
     if (!confirm("Delete ALL files in this box? This cannot be undone.")) return;
     setStatus("Clearing...");
     fetch(mediaClearUrl(BOX_ID, TOKEN), { method: "DELETE" })
-      .then(function(res) { if(res.status===401) throw new Error("unauthorized"); if(!res.ok) alert("Clear failed."); $("previewBody").innerHTML="<div class='preview-empty'>Select a file to preview</div>"; return refreshList(); })
+      .then(function(res) { if(res.status===401) throw new Error("unauthorized"); if(!res.ok) alert("Clear failed."); return refreshList(); })
       .catch(handleErr);
   };
 }
@@ -365,15 +310,12 @@ function main() {
 
   loadBoxesJson().then(function(data) {
     var boxes = Array.isArray(data.boxes) ? data.boxes : [];
-    var row = boxes.find(function(b) { return String(b.id || "").padStart(2,"0") === BOX_ID; });
+    var row = boxes.find ? boxes.find(function(b) { return String(b.id||"").padStart(2,"0") === BOX_ID; }) : null;
     KV_KEY = row && typeof row.key === "string" ? row.key.trim() : "";
     var tags = (row && Array.isArray(row.tags)) ? row.tags : [];
     $("tags").innerHTML = "";
-    tags.filter(Boolean).forEach(function(t) {
-      var s = document.createElement("span"); s.className = "tag"; s.textContent = String(t); $("tags").appendChild(s);
-    });
-    wireButtons();
-    wireDropzone();
+    tags.filter(Boolean).forEach(function(t) { var s=document.createElement("span"); s.className="tag"; s.textContent=String(t); $("tags").appendChild(s); });
+    wireButtons(); wireDropzone();
     var saved = getSavedToken();
     return checkToken(KV_KEY || "dummy", saved || "x").then(function(ok) {
       if (ok && saved) {
@@ -399,10 +341,7 @@ function main() {
         });
       }
     });
-  }).catch(function(e) {
-    setStatus("Error: " + (e && e.message ? e.message : String(e)));
-    console.error(e);
-  });
+  }).catch(function(e) { setStatus("Error: " + (e&&e.message?e.message:String(e))); console.error(e); });
 }
 
 main();
