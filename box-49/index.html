@@ -1,95 +1,323 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="robots" content="noindex" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Box</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#f6f7f9; --card:#fff; --text:#111; --muted:#667085; --line:#e6e8ee; --btn:#111; --btnText:#fff; --danger:#b91c1c; }
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;margin:0;padding:16px;background:var(--bg);color:var(--text);}
-    .wrap{max-width:980px;margin:0 auto;}
-    .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
-    h1{margin:0;font-size:22px;}
-    .pill{font-size:12px;color:#475569;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
-    .btn{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px}
-    .btn.primary{background:var(--btn);color:var(--btnText);border-color:var(--btn);}
-    .btn.danger{border-color:#fecaca;background:#fff;color:var(--danger);}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;}
-    .meta{color:var(--muted);font-size:13px;line-height:1.45}
-    .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
-    .tag{font-size:12px;color:#334155;background:#eef2ff;padding:4px 8px;border-radius:999px;border:1px solid #e0e7ff;}
-    .fileRow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;margin:8px 0;}
-    .fileName{font-weight:800;font-size:14px;}
-    .fileMeta{color:var(--muted);font-size:12px;margin-top:3px;}
-    .fileBtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    #status{color:var(--muted);font-size:13px;margin-top:6px}
-    #empty{color:var(--muted);font-size:13px;display:none}
-    #preview{margin-top:14px}
-    .previewTitle{font-weight:800;margin:0 0 8px}
-    .previewImg{max-width:100%;border-radius:14px;border:1px solid var(--line);background:#fff}
-    .previewMedia{width:100%;border-radius:14px;border:1px solid var(--line);background:#fff}
-    .previewFrame{width:100%;height:70vh;border-radius:14px;border:1px solid var(--line);background:#fff}
-    .previewHint{color:var(--muted);font-size:13px}
-    a.link{color:#334155;text-decoration:none;border-bottom:1px dashed #cbd5e1}
-  
-    #dropzone.hover{border-color:#93c5fd;background:#eff6ff;color:#334155}
-    .progRow{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;margin:8px 0;}
-    .progName{font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .progMeta{color:var(--muted);font-size:12px;justify-self:end}
-    .progBar{grid-column:1 / -1;height:10px;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#f8fafc}
-    .progFill{height:100%;background:#111;width:0%}
-    .progPct{grid-column:1 / -1;color:var(--muted);font-size:12px;text-align:right}
-        </style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F7F5;
+      --surface: #FFFFFF;
+      --surface-2: #F0EFEB;
+      --border: rgba(0,0,0,0.07);
+      --border-strong: rgba(0,0,0,0.13);
+      --text: #0F0F0E;
+      --muted: #787873;
+      --accent: #0F0F0E;
+      --accent-fg: #FFFFFF;
+      --danger: #A32D2D;
+      --danger-bg: #FCEBEB;
+      --danger-border: #F7C1C1;
+      --tag-bg: #EFEFEB;
+      --tag-text: #3C3C38;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --font: 'DM Sans', -apple-system, sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111110;
+        --surface: #1C1C1A;
+        --surface-2: #242422;
+        --border: rgba(255,255,255,0.07);
+        --border-strong: rgba(255,255,255,0.13);
+        --text: #F0EFEB;
+        --muted: #88887F;
+        --accent: #F0EFEB;
+        --accent-fg: #111110;
+        --danger: #F7C1C1;
+        --danger-bg: #501313;
+        --danger-border: #A32D2D;
+        --tag-bg: #2A2A27;
+        --tag-text: #B8B8B0;
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 32px 24px 48px; }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .header-left h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      margin-bottom: 3px;
+    }
+
+    .header-left .sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 999px;
+    }
+    .pill.ok { color: #3B6D11; background: #EAF3DE; border-color: #C0DD97; }
+
+    @media (prefers-color-scheme: dark) {
+      .pill.ok { color: #C0DD97; background: #173404; border-color: #3B6D11; }
+    }
+
+    .btn {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.7; }
+    .btn.primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+    .btn.danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 6px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .meta-row:last-child { margin-bottom: 0; }
+    .meta-label { color: var(--muted); min-width: 60px; }
+    .meta-value { color: var(--text); font-family: var(--mono); font-size: 12px; word-break: break-all; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+    /* ── Dropzone ── */
+    .dropzone {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      margin-bottom: 16px;
+    }
+    .dropzone:hover, .dropzone.hover { background: var(--surface-2); border-color: var(--text); color: var(--text); }
+
+    .dropzone-icon { font-size: 22px; margin-bottom: 6px; }
+
+    /* ── Files header ── */
+    .files-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .files-title { font-size: 14px; font-weight: 600; }
+
+    .files-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── File rows ── */
+    .file-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+    .file-row:hover { border-color: var(--border-strong); }
+
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-meta { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+    .file-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* ── Progress rows ── */
+    .prog-row {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      margin-bottom: 8px;
+    }
+    .prog-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .prog-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prog-pct { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+    .prog-track { height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; border-radius: 999px; }
+
+    /* ── Status ── */
+    #status { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    #empty { color: var(--muted); font-size: 13px; display: none; padding: 20px 0; text-align: center; }
+
+    /* ── Preview ── */
+    #preview { margin-top: 16px; }
+    .preview-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .preview-img { max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .preview-media { width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .preview-frame { width: 100%; height: 70vh; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .preview-hint { color: var(--muted); font-size: 13px; }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <h1 id="boxTitle">BOX</h1>
-        <div id="status">Loading…</div>
-      </div>
-      <div class="row">
-        <span class="pill" id="authPill">Auth: …</span>
-        <button class="btn" id="logoutBtn">退出/清除本机授权</button>
-        <a class="link" href="../index.html">返回索引</a>
-      </div>
-    </div>
+<div class="wrap">
 
-    <div class="card">
-      <div class="meta"><b>KV key：</b><span id="kvKey">…</span></div>
-      <div class="meta"><b>备注：</b><span id="note"></span></div>
-      <div class="tags" id="tags"></div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="openUrlBtn">打开该箱子的真实 URL（跳转）</button>
-      </div>
-      <div class="meta" style="margin-top:8px">提示：本页可上传任意文件（图片/视频/PDF/MP3/DOC/ZIP…），文件将保存在 Cloudflare R2（私有）。</div>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1 id="boxTitle">BOX</h1>
+      <div id="status">Loading…</div>
     </div>
-
-    <div class="card">
-      <div id="dropzone" style="margin-bottom:10px;border:2px dashed var(--line);border-radius:14px;padding:14px;background:#fff;color:var(--muted);text-align:center;cursor:pointer;">
-        把文件拖拽到这里上传（或点右侧“上传文件”）
-      </div>
-      <div id="uploadProgress" style="display:none"></div>
-      <div class="row" style="justify-content:space-between">
-        <div style="font-weight:800">📂 Files in this box</div>
-        <div class="row">
-          <input id="fileIn" type="file" style="display:none" multiple />
-          <button class="btn primary" id="uploadBtn">上传文件</button>
-          <button class="btn" id="refreshBtn">刷新</button>
-          <button class="btn danger" id="clearBtn">清空全部</button>
-        </div>
-      </div>
-      <div id="files"></div>
-      <div id="empty">暂无文件。点击“上传文件”把照片/视频/文档丢进来即可。</div>
-      <div id="preview"></div>
+    <div class="header-right">
+      <span class="pill" id="authPill">Auth: …</span>
+      <button class="btn" id="logoutBtn">Sign out</button>
+      <a class="back-link" href="../index.html">← All Boxes</a>
     </div>
   </div>
 
-  <script>
-    document.getElementById("dropzone").addEventListener("click", ()=>document.getElementById("fileIn").click());
-  </script>
-  <script src="../box.js"></script>
+  <!-- Box Info -->
+  <div class="card">
+    <div class="card-title">Box Info</div>
+    <div class="meta-row">
+      <span class="meta-label">KV Key</span>
+      <span class="meta-value" id="kvKey">—</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">Note</span>
+      <span class="meta-value" id="note" style="font-family:var(--font);font-size:13px;">—</span>
+    </div>
+    <div class="tags" id="tags"></div>
+    <div class="actions">
+      <button class="btn primary" id="openUrlBtn">Open URL →</button>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="card">
+    <div id="dropzone" class="dropzone">
+      <div class="dropzone-icon">⬆</div>
+      Drop files here to upload
+    </div>
+    <div id="uploadProgress" style="display:none"></div>
+
+    <div class="files-header">
+      <div class="files-title">Files</div>
+      <div class="files-actions">
+        <input id="fileIn" type="file" style="display:none" multiple />
+        <button class="btn primary" id="uploadBtn">Upload</button>
+        <button class="btn" id="refreshBtn">Refresh</button>
+        <button class="btn danger" id="clearBtn">Clear all</button>
+      </div>
+    </div>
+
+    <div id="files"></div>
+    <div id="empty">No files yet. Upload photos, videos, or documents.</div>
+    <div id="preview"></div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById("dropzone").addEventListener("click", () => document.getElementById("fileIn").click());
+</script>
+<script src="../box.js"></script>
 </body>
 </html>
