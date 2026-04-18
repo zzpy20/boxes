@@ -104,8 +104,7 @@ function ensureModal() {
   overlay.addEventListener("click", (e) => { if (e.target === overlay) hideModal(); });
   document.getElementById("authClose").addEventListener("click", hideModal);
 }
-function showModal({
-        onClose: () => { location.href = "/boxes/"; }, onSubmit } = {}) {
+function showModal({ onSubmit } = {}) {
   ensureModal();
   const overlay = document.getElementById("authOverlay");
   const input = document.getElementById("authInput");
