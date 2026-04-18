@@ -211,7 +211,7 @@
     .files-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
     /* ── File rows ── */
-    .file-row {
+    .fileRow {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -223,15 +223,15 @@
       margin-bottom: 8px;
       transition: border-color 0.15s;
     }
-    .file-row:hover { border-color: var(--border-strong); }
+    .fileRow:hover { border-color: var(--border-strong); }
 
-    .file-info { flex: 1; min-width: 0; }
-    .file-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .file-meta { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
-    .file-btns { display: flex; gap: 6px; flex-shrink: 0; }
+    .fileMain { flex: 1; min-width: 0; }
+    .fileName { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fileMeta { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+    .fileBtns { display: flex; gap: 6px; flex-shrink: 0; }
 
     /* ── Progress rows ── */
-    .prog-row {
+    .progRow {
       padding: 12px 14px;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -239,10 +239,10 @@
       margin-bottom: 8px;
     }
     .prog-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .prog-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .prog-pct { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-    .prog-track { height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-    .prog-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; border-radius: 999px; }
+    .progName { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .progPct { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+    .progBar { height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+    .progFill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; border-radius: 999px; }
 
     /* ── Status ── */
     #status { font-size: 13px; color: var(--muted); margin-top: 4px; }
