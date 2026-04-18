@@ -1,4 +1,4 @@
-// box.js v6 - multiselect + batch delete + HEIC + grid/list
+// box.js v7 - collapsible notes + grid hover fix + multiselect
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
@@ -153,7 +153,11 @@ function loadNote() {
   var status = $("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID, TOKEN), { cache: "no-store" })
     .then(function(res) { return res.ok ? res.text() : ""; })
-    .then(function(html) { el.innerHTML = html || ""; if (status) status.textContent = html ? "Note loaded" : "No note yet"; })
+    .then(function(html) {
+      el.innerHTML = html || "";
+      if (status) status.textContent = html ? "Note loaded" : "No note yet";
+      if (typeof updateNotesPreview === "function") updateNotesPreview();
+    })
     .catch(function() { if (status) status.textContent = "Could not load note"; });
 }
 
@@ -164,12 +168,14 @@ function saveNote() {
   if (status) status.textContent = "Saving...";
   return fetch(mediaNotePostUrl(BOX_ID, TOKEN), {
     method: "POST", headers: { "Content-Type": "text/html; charset=utf-8" }, body: el.innerHTML
-  }).then(function(res) { if (status) status.textContent = res.ok ? "Saved" : "Save failed"; })
-  .catch(function() { if (status) status.textContent = "Save failed"; })
+  }).then(function(res) {
+    if (status) status.textContent = res.ok ? "Saved" : "Save failed";
+    if (typeof updateNotesPreview === "function") updateNotesPreview();
+  }).catch(function() { if (status) status.textContent = "Save failed"; })
   .then(function() { if (btn) btn.disabled = false; });
 }
 
-// ── Selection state ──
+// ── Selection ──
 var selectedFiles = {};
 
 function updateActionBar() {
@@ -204,13 +210,13 @@ function makeThumb(name, ext, fileUrl) {
         wrap.innerHTML = "";
         var img = document.createElement("img"); img.src = url; img.alt = name; img.className = "thumb-img";
         wrap.appendChild(img);
-        var popup = makePopup(url); wrap.appendChild(popup);
+        wrap.appendChild(makePopup(url));
         wrap.onclick = function(e) { e.stopPropagation(); window.open(url, "_blank"); };
       }).catch(function() { wrap.innerHTML = "🖼"; });
     } else {
       var img = document.createElement("img"); img.src = fileUrl; img.alt = name; img.className = "thumb-img"; img.loading = "lazy";
       wrap.appendChild(img);
-      var popup = makePopup(fileUrl); wrap.appendChild(popup);
+      wrap.appendChild(makePopup(fileUrl));
       wrap.onclick = function(e) { e.stopPropagation(); window.open(fileUrl, "_blank"); };
     }
   } else {
@@ -248,7 +254,6 @@ function refreshList() {
         var fileUrl = mediaFileUrl(BOX_ID, name, TOKEN);
         var row = document.createElement("div"); row.className = "fileRow";
 
-        // Checkbox
         var cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "fileCheck";
         cb.addEventListener("change", function() {
           if (cb.checked) { selectedFiles[name] = true; row.classList.add("selected"); }

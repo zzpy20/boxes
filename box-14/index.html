@@ -29,15 +29,16 @@
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
     .wrap{max-width:900px;margin:0 auto;padding:24px 24px 100px;}
 
-    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-bottom:20px;flex-wrap:wrap;}
+    /* Header with breadcrumb */
+    .header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+    .header-left{min-width:0;}
+    .breadcrumb{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap;}
     .breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.15s;}
     .breadcrumb a:hover{color:var(--text);}
-    .breadcrumb-sep{color:var(--border-strong);}
+    .breadcrumb-sep{color:var(--border-strong);font-size:11px;}
     .breadcrumb-current{color:var(--text);font-weight:600;}
-
-    .header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
     .header-left h1{font-size:24px;font-weight:600;letter-spacing:-0.4px;margin-bottom:2px;}
-    .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:18px;}
 
     .pill{font-size:12px;font-family:var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:5px 10px;border-radius:999px;}
     .pill.ok{color:#3B6D11;background:#EAF3DE;border-color:#C0DD97;}
@@ -50,10 +51,20 @@
     .btn.sm{padding:5px 10px;font-size:12px;}
     .btn.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
 
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;}
-    .card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:14px;}
+    /* Card */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
 
-    .notes-toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+    /* Collapsible Notes */
+    .notes-toggle{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;user-select:none;}
+    .notes-toggle:hover{background:var(--surface-2);}
+    .notes-toggle-left{display:flex;align-items:center;gap:8px;}
+    .notes-toggle-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+    .notes-preview{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;}
+    .notes-chevron{font-size:12px;color:var(--muted);transition:transform 0.2s;}
+    .notes-body{padding:0 20px 20px;border-top:1px solid var(--border);}
+    .notes-body.hidden{display:none;}
+
+    .notes-toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding:12px 0 10px;border-bottom:1px solid var(--border);}
     .notes-toolbar button{font-family:var(--font);font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;transition:opacity 0.15s;}
     .notes-toolbar button:hover{opacity:0.7;}
     .notes-editor{min-height:120px;max-height:320px;overflow-y:auto;outline:none;font-size:14px;line-height:1.65;color:var(--text);padding:4px 0;}
@@ -67,6 +78,8 @@
     .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
     .tag{font-size:11px;font-weight:500;color:var(--tag-text);background:var(--tag-bg);padding:3px 9px;border-radius:999px;}
 
+    /* Files card */
+    .files-card-body{padding:20px;}
     .dropzone{border:1.5px dashed var(--border-strong);border-radius:var(--radius-sm);padding:16px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;margin-bottom:14px;}
     .dropzone:hover,.dropzone.hover{background:var(--surface-2);border-color:var(--text);color:var(--text);}
     .dropzone-icon{font-size:18px;margin-bottom:4px;}
@@ -90,9 +103,9 @@
     .fileThumb.clickable{cursor:pointer;}
     .fileThumb img.thumb-img{width:48px;height:48px;object-fit:cover;border-radius:8px;display:block;}
 
-    /* Hover popup — desktop only */
+    /* List view hover popup - desktop only */
     @media(hover:hover){
-      .fileThumb:hover .thumbPopup{opacity:1;}
+      .list-view .fileThumb:hover .thumbPopup{opacity:1;}
     }
     .thumbPopup{position:absolute;left:58px;top:50%;transform:translateY(-50%);z-index:200;opacity:0;transition:opacity 0.2s;pointer-events:none;}
     .thumbPopup img{width:320px;height:320px;object-fit:contain;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);box-shadow:0 12px 40px rgba(0,0,0,0.2);}
@@ -104,12 +117,16 @@
 
     /* GRID VIEW */
     #files.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
-    #files.grid-view .fileRow{display:flex;flex-direction:column;align-items:center;padding:12px 10px;gap:8px;border-radius:var(--radius-sm);}
+    #files.grid-view .fileRow{display:flex;flex-direction:column;align-items:center;padding:12px 10px;gap:8px;border-radius:var(--radius-sm);position:relative;}
     #files.grid-view .fileCheck{position:absolute;top:8px;left:8px;z-index:10;}
-    #files.grid-view .fileRow{position:relative;}
-    #files.grid-view .fileThumb{width:100%;height:120px;border-radius:10px;font-size:36px;}
+    #files.grid-view .fileThumb{width:100%;height:120px;border-radius:10px;font-size:36px;overflow:visible;}
     #files.grid-view .fileThumb img.thumb-img{width:100%;height:120px;object-fit:cover;border-radius:10px;}
-    #files.grid-view .thumbPopup{display:none;}
+    /* Grid hover popup - above the card, desktop only */
+    #files.grid-view .thumbPopup{left:50%;top:auto;bottom:calc(100% + 8px);transform:translateX(-50%);opacity:0;}
+    @media(hover:hover){
+      #files.grid-view .fileThumb:hover .thumbPopup{opacity:1;}
+    }
+    #files.grid-view .thumbPopup img{width:260px;height:260px;}
     #files.grid-view .fileMain{width:100%;text-align:center;}
     #files.grid-view .fileName{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     #files.grid-view .fileMeta{font-size:10px;}
@@ -126,7 +143,6 @@
 
     #status{font-size:13px;color:var(--muted);margin-top:2px;}
     #empty{color:var(--muted);font-size:13px;display:none;padding:20px 0;text-align:center;}
-
     .heic-loading{font-size:11px;color:var(--muted);font-family:var(--mono);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border-radius:8px;}
 
     /* Floating action bar */
@@ -142,16 +158,17 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="breadcrumb">
-    <a href="https://home.1000600.xyz">Home</a>
-    <span class="breadcrumb-sep">›</span>
-    <a href="../index.html">All Boxes</a>
-    <span class="breadcrumb-sep">›</span>
-    <span class="breadcrumb-current" id="breadcrumbCurrent">BOX</span>
-  </div>
 
+  <!-- Header with breadcrumb above title -->
   <div class="header">
     <div class="header-left">
+      <div class="breadcrumb">
+        <a href="https://home.1000600.xyz">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="../index.html">All Boxes</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current" id="breadcrumbCurrent">BOX</span>
+      </div>
       <h1 id="boxTitle">BOX</h1>
       <div id="status">Loading…</div>
     </div>
@@ -161,48 +178,60 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Notes</div>
-    <div class="notes-toolbar">
-      <button onclick="fmt('bold')"><b>B</b></button>
-      <button onclick="fmt('italic')"><i>I</i></button>
-      <button onclick="fmt('underline')"><u>U</u></button>
-      <button onclick="fmt('insertUnorderedList')">• List</button>
-      <button onclick="fmt('insertOrderedList')">1. List</button>
-      <button onclick="insertEmoji()">😊</button>
-      <button onclick="document.execCommand('removeFormat')">Clear</button>
+  <!-- Notes - collapsible -->
+  <div class="card" id="notesCard">
+    <div class="notes-toggle" id="notesToggle" onclick="toggleNotes()">
+      <div class="notes-toggle-left">
+        <span class="notes-toggle-title">Notes</span>
+        <span class="notes-preview" id="notesPreview">Click to expand…</span>
+      </div>
+      <span class="notes-chevron" id="notesChevron">›</span>
     </div>
-    <div class="notes-editor" id="notesEditor" contenteditable="true" data-placeholder="Add notes about what's in this box…"></div>
-    <div class="notes-footer">
-      <span class="notes-status" id="notesStatus">—</span>
-      <button class="btn primary sm" id="saveNoteBtn">Save note</button>
+    <div class="notes-body hidden" id="notesBody">
+      <div class="notes-toolbar">
+        <button onclick="fmt('bold')"><b>B</b></button>
+        <button onclick="fmt('italic')"><i>I</i></button>
+        <button onclick="fmt('underline')"><u>U</u></button>
+        <button onclick="fmt('insertUnorderedList')">• List</button>
+        <button onclick="fmt('insertOrderedList')">1. List</button>
+        <button onclick="insertEmoji()">😊</button>
+        <button onclick="document.execCommand('removeFormat')">Clear</button>
+      </div>
+      <div class="notes-editor" id="notesEditor" contenteditable="true" data-placeholder="Add notes about what's in this box…"></div>
+      <div class="notes-footer">
+        <span class="notes-status" id="notesStatus">—</span>
+        <button class="btn primary sm" id="saveNoteBtn">Save note</button>
+      </div>
+      <div class="tags" id="tags"></div>
     </div>
-    <div class="tags" id="tags"></div>
   </div>
 
+  <!-- Files -->
   <div class="card">
-    <div id="dropzone" class="dropzone">
-      <div class="dropzone-icon">⬆</div>
-      Drop files here to upload
-    </div>
-    <div id="uploadProgress" style="display:none"></div>
-    <div class="files-header">
-      <div class="files-left">
-        <div class="files-title">Files</div>
-        <div class="view-toggle">
-          <button class="btn sm active" id="btnList" onclick="setView('list')" title="List view">☰</button>
-          <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid view">⊞</button>
+    <div class="files-card-body">
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">⬆</div>
+        Drop files here to upload
+      </div>
+      <div id="uploadProgress" style="display:none"></div>
+      <div class="files-header">
+        <div class="files-left">
+          <div class="files-title">Files</div>
+          <div class="view-toggle">
+            <button class="btn sm active" id="btnList" onclick="setView('list')" title="List view">☰</button>
+            <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid view">⊞</button>
+          </div>
+        </div>
+        <div class="files-actions">
+          <input id="fileIn" type="file" style="display:none" multiple />
+          <button class="btn primary" id="uploadBtn">Upload</button>
+          <button class="btn" id="refreshBtn">Refresh</button>
+          <button class="btn danger" id="clearBtn">Clear all</button>
         </div>
       </div>
-      <div class="files-actions">
-        <input id="fileIn" type="file" style="display:none" multiple />
-        <button class="btn primary" id="uploadBtn">Upload</button>
-        <button class="btn" id="refreshBtn">Refresh</button>
-        <button class="btn danger" id="clearBtn">Clear all</button>
-      </div>
+      <div id="files" class="list-view"></div>
+      <div id="empty">No files yet. Upload photos, videos, or documents.</div>
     </div>
-    <div id="files"></div>
-    <div id="empty">No files yet. Upload photos, videos, or documents.</div>
   </div>
 </div>
 
@@ -224,6 +253,26 @@
   }
   document.getElementById("dropzone").addEventListener("click", function() { document.getElementById("fileIn").click(); });
 
+  // Notes toggle
+  var notesOpen = false;
+  function toggleNotes() {
+    notesOpen = !notesOpen;
+    var body = document.getElementById("notesBody");
+    var chevron = document.getElementById("notesChevron");
+    body.classList.toggle("hidden", !notesOpen);
+    chevron.style.transform = notesOpen ? "rotate(90deg)" : "";
+  }
+
+  // Update preview text in collapsed state
+  function updateNotesPreview() {
+    var editor = document.getElementById("notesEditor");
+    var preview = document.getElementById("notesPreview");
+    if (!editor || !preview) return;
+    var text = editor.innerText || editor.textContent || "";
+    text = text.trim().replace(/\s+/g, " ");
+    preview.textContent = text ? (text.length > 50 ? text.slice(0, 50) + "…" : text) : "Click to expand…";
+  }
+
   var currentView = localStorage.getItem("boxView") || "list";
   function setView(v) {
     currentView = v;
@@ -232,11 +281,13 @@
     var btnList = document.getElementById("btnList");
     var btnGrid = document.getElementById("btnGrid");
     if (v === "grid") {
+      files.classList.remove("list-view");
       files.classList.add("grid-view");
       btnGrid.classList.add("active");
       btnList.classList.remove("active");
     } else {
       files.classList.remove("grid-view");
+      files.classList.add("list-view");
       btnList.classList.add("active");
       btnGrid.classList.remove("active");
     }
