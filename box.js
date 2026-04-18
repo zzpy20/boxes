@@ -210,13 +210,17 @@ function makeThumb(name, ext, fileUrl) {
         wrap.innerHTML = "";
         var img = document.createElement("img"); img.src = url; img.alt = name; img.className = "thumb-img";
         wrap.appendChild(img);
-        wrap.appendChild(makePopup(url));
+        var popup2 = makePopup(url);
+        wrap.appendChild(popup2);
+        attachPopupFollow(wrap, popup2);
         wrap.onclick = function(e) { e.stopPropagation(); window.open(url, "_blank"); };
       }).catch(function() { wrap.innerHTML = "🖼"; });
     } else {
       var img = document.createElement("img"); img.src = fileUrl; img.alt = name; img.className = "thumb-img"; img.loading = "lazy";
       wrap.appendChild(img);
-      wrap.appendChild(makePopup(fileUrl));
+      var popup1 = makePopup(fileUrl);
+      wrap.appendChild(popup1);
+      attachPopupFollow(wrap, popup1);
       wrap.onclick = function(e) { e.stopPropagation(); window.open(fileUrl, "_blank"); };
     }
   } else {
@@ -229,6 +233,20 @@ function makePopup(imgUrl) {
   var popup = document.createElement("div"); popup.className = "thumbPopup";
   var popImg = document.createElement("img"); popImg.src = imgUrl; popImg.alt = "";
   popup.appendChild(popImg); return popup;
+}
+function attachPopupFollow(wrap, popup) {
+  wrap.addEventListener("mousemove", function(e) {
+    var x = e.clientX, y = e.clientY;
+    var pw = 300, ph = 300;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var left = x + 20; var top = y - ph/2;
+    if (left + pw > vw) left = x - pw - 20;
+    if (top < 8) top = 8;
+    if (top + ph > vh - 8) top = vh - ph - 8;
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
+    popup.style.transform = "none";
+  });
 }
 
 function refreshList() {

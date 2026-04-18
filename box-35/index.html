@@ -107,7 +107,7 @@
     @media(hover:hover){
       .list-view .fileThumb:hover .thumbPopup{opacity:1;}
     }
-    .thumbPopup{position:absolute;left:58px;top:50%;transform:translateY(-50%);z-index:200;opacity:0;transition:opacity 0.2s;pointer-events:none;}
+    .thumbPopup{position:fixed;z-index:9000;opacity:0;transition:opacity 0.15s;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);}
     .thumbPopup img{width:320px;height:320px;object-fit:contain;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);box-shadow:0 12px 40px rgba(0,0,0,0.2);}
 
     .fileMain{min-width:0;}
@@ -122,13 +122,13 @@
     #files.grid-view .fileThumb{width:100%;height:120px;border-radius:10px;font-size:36px;overflow:visible;}
     #files.grid-view .fileThumb img.thumb-img{width:100%;height:120px;object-fit:cover;border-radius:10px;}
     /* Grid hover popup - above the card, desktop only */
-    #files.grid-view .thumbPopup{left:50%;top:auto;bottom:calc(100% + 8px);transform:translateX(-50%);opacity:0;}
+    #files.grid-view .thumbPopup{}
     @media(hover:hover){
       #files.grid-view .fileThumb:hover .thumbPopup{opacity:1;}
     }
-    #files.grid-view .thumbPopup img{width:260px;height:260px;}
+    #files.grid-view .thumbPopup img{width:300px;height:300px;}
     #files.grid-view .fileMain{width:100%;text-align:center;}
-    #files.grid-view .fileName{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #files.grid-view .fileName{font-size:12px;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all;}
     #files.grid-view .fileMeta{font-size:10px;}
     #files.grid-view .fileBtns{justify-content:center;}
 
