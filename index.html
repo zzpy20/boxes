@@ -13,8 +13,8 @@
       --bg:#F7F7F5;--surface:#FFFFFF;--surface-2:#F0EFEB;
       --border:rgba(0,0,0,0.07);--border-strong:rgba(0,0,0,0.13);
       --text:#0F0F0E;--muted:#787873;--accent:#0F0F0E;--accent-fg:#FFFFFF;
-      --tag-bg:#EFEFEB;--tag-text:#3C3C38;
-      --cover-bg:#EEECEA;--radius:16px;--radius-sm:10px;
+      --tag-bg:#EFEFEB;--tag-text:#3C3C38;--cover-bg:#EEECEA;
+      --radius:16px;--radius-sm:10px;
       --font:'DM Sans',-apple-system,sans-serif;--mono:'DM Mono',monospace;
     }
     @media(prefers-color-scheme:dark){:root{
@@ -29,43 +29,68 @@
     .header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
     .site-title{font-size:24px;font-weight:600;letter-spacing:-0.3px;}
     .site-sub{font-size:13px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+    .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
     .status-pill{display:flex;align-items:center;gap:6px;background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97;font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;}
     @media(prefers-color-scheme:dark){.status-pill{background:#173404;color:#C0DD97;border-color:#3B6D11;}}
     .dot{width:7px;height:7px;border-radius:50%;background:#3B6D11;}
     @media(prefers-color-scheme:dark){.dot{background:#C0DD97;}}
 
+    .btn{font-family:var(--font);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;transition:opacity 0.15s;white-space:nowrap;text-decoration:none;display:inline-block;}
+    .btn:hover{opacity:0.7;}
+    .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
+
     /* Search */
-    .search-wrap{position:relative;margin-bottom:24px;}
+    .search-wrap{position:relative;margin-bottom:16px;}
     .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
     .search-input{font-family:var(--font);font-size:14px;width:100%;padding:11px 14px 11px 40px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
     .search-input:focus{border-color:var(--border-strong);}
     .search-input::placeholder{color:var(--muted);}
+    .search-hint{font-size:12px;color:var(--muted);margin-bottom:20px;font-family:var(--mono);}
 
-    .section-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;}
+    /* Auth bar */
+    .auth-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+    .auth-bar.hidden{display:none;}
+    .auth-bar input{font-family:var(--font);flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-size:14px;outline:none;min-width:160px;}
+    .auth-bar input:focus{border-color:var(--text);}
+    .auth-label{font-size:13px;color:var(--muted);white-space:nowrap;}
+    .auth-status{font-size:12px;font-family:var(--mono);}
+    .auth-status.ok{color:#3B6D11;}
+    .auth-status.err{color:var(--danger,#A32D2D);}
 
-    .grid{display:grid;gap:12px;margin-bottom:2rem;}
-    .grid-2{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+    .counter{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;}
+
+    .grid{display:grid;gap:12px;margin-bottom:2rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
 
     a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.15s,transform 0.1s;}
     a.card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
     a.card:active{transform:translateY(0);}
     a.card.hidden{display:none;}
 
-    .cover{height:120px;background:var(--cover-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+    .cover{height:130px;background:var(--cover-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
     .cover img{width:100%;height:100%;object-fit:cover;display:block;}
-    .cover-placeholder{font-size:28px;opacity:0.4;}
+    .cover-placeholder{font-size:28px;opacity:0.35;}
     .cover-label{position:absolute;bottom:8px;left:8px;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:2px 7px;border-radius:999px;}
 
     .card-body{padding:12px 14px 14px;}
-    .card-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-bottom:2px;}
-    .card-note{font-size:13px;color:var(--muted);line-height:1.45;min-height:36px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-    .card-tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;}
+    .card-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-bottom:4px;}
+    .card-desc{font-size:13px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:20px;}
+    .card-tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;}
     .tag{font-size:11px;font-weight:500;color:var(--tag-text);background:var(--tag-bg);padding:3px 8px;border-radius:999px;cursor:pointer;border:none;transition:opacity 0.15s;}
     .tag:hover{opacity:0.7;}
 
-    .empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);display:none;}
+    /* Search results */
+    .search-results{margin-bottom:24px;display:none;}
+    .search-results.visible{display:block;}
+    .search-result-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;color:inherit;transition:border-color 0.15s;}
+    .search-result-item:hover{border-color:var(--border-strong);}
+    .result-icon{font-size:18px;flex-shrink:0;}
+    .result-main{min-width:0;flex:1;}
+    .result-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .result-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+    .result-match{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .result-box{font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0;}
 
-    .counter{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;}
+    .empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);display:none;}
 
     footer{max-width:1080px;margin:0 auto;padding:16px 24px 32px;color:var(--muted);font-size:12px;font-family:var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);}
   </style>
@@ -77,16 +102,32 @@
       <div class="site-title">Storage Boxes</div>
       <div class="site-sub">boxes.1000600.xyz</div>
     </div>
-    <div class="status-pill"><span class="dot"></span>Private · Cloudflare R2</div>
+    <div class="header-right">
+      <div class="status-pill"><span class="dot"></span>Private · Cloudflare R2</div>
+      <button class="btn" id="signOutBtn" style="display:none">Sign out</button>
+    </div>
   </div>
 
+  <!-- Auth bar (shown when not logged in) -->
+  <div class="auth-bar" id="authBar">
+    <span class="auth-label">Passphrase:</span>
+    <input type="password" id="passphraseInput" placeholder="Enter passphrase to load covers & search…" autocomplete="current-password" />
+    <button class="btn primary" id="unlockBtn">Unlock</button>
+    <span class="auth-status" id="authStatus"></span>
+  </div>
+
+  <!-- Search -->
   <div class="search-wrap">
     <span class="search-icon">⌕</span>
-    <input class="search-input" id="q" type="search" placeholder="Search boxes, notes, tags…" autocomplete="off" />
+    <input class="search-input" id="q" type="search" placeholder="Search all boxes — files, notes, tags, captions…" autocomplete="off" />
   </div>
+  <div class="search-hint" id="searchHint">Sign in above to enable full search across all boxes</div>
+
+  <!-- Search results (shown when searching) -->
+  <div class="search-results" id="searchResults"></div>
 
   <div class="counter" id="counter">Loading…</div>
-  <div class="grid grid-2" id="grid"></div>
+  <div class="grid" id="grid"></div>
   <div class="empty" id="empty">No boxes match your search.</div>
 </div>
 
@@ -96,110 +137,279 @@
 </footer>
 
 <script>
-  const TOKEN_KEY="boxes_auth_token";
-  const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
+const TOKEN_KEY = "boxes_auth_token";
+const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 
-  function getTok(){try{return(localStorage.getItem(TOKEN_KEY)||"").trim();}catch{return"";}}
-  function mediaFileUrl(id,name,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/"+encodeURIComponent(name));u.searchParams.set("t",t);return u.toString();}
-  function mediaListUrl(id,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/list");u.searchParams.set("t",t);return u.toString();}
+function getTok() { try { return (localStorage.getItem(TOKEN_KEY)||"").trim(); } catch { return ""; } }
+function setTok(t) { try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch {} }
+function clearTok() { try { localStorage.removeItem(TOKEN_KEY); } catch {} }
 
-  document.getElementById("stamp").textContent=new Date().toISOString().slice(0,10);
+function mediaFileUrl(id, name, t) { var u = new URL(WORKER_BASE+"media/box-"+id+"/"+encodeURIComponent(name)); u.searchParams.set("t",t); return u.toString(); }
+function mediaListUrl(id, t) { var u = new URL(WORKER_BASE+"media/box-"+id+"/list"); u.searchParams.set("t",t); return u.toString(); }
+function searchIndexUrl(t) { var u = new URL(WORKER_BASE+"search-index"); u.searchParams.set("t",t); return u.toString(); }
+function checkUrl(t) { var u = new URL(WORKER_BASE+"dummy"); u.searchParams.set("t",t); u.searchParams.set("check","1"); return u.toString(); }
 
-  const pad2=n=>String(n).padStart(2,"0");
-  const normalize=s=>(s||"").toString().trim().toLowerCase();
+document.getElementById("stamp").textContent = new Date().toISOString().slice(0,10);
 
-  function isImage(name){return["jpg","jpeg","png","gif","webp","avif"].includes((name||"").split(".").pop().toLowerCase());}
+const pad2 = n => String(n).padStart(2,"0");
+const normalize = s => (s||"").toString().trim().toLowerCase();
+function isImage(name) { return ["jpg","jpeg","png","gif","webp","avif"].includes((name||"").split(".").pop().toLowerCase()); }
 
-  async function loadCoverForCard(card,token){
-    const boxId=card.dataset.boxid;const cover=card.querySelector(".cover");
-    if(!boxId||!cover||cover.dataset.loaded)return;cover.dataset.loaded="1";
-    try{
-      const res=await fetch(mediaListUrl(boxId,token),{cache:"no-store"});
-      if(!res.ok)return;const arr=await res.json();
-      const first=(Array.isArray(arr)?arr:[]).map(x=>x.name).find(isImage);
-      if(!first)return;
-      const img=new Image();img.loading="lazy";img.src=mediaFileUrl(boxId,first,token);img.alt=`BOX-${boxId} cover`;
-      const ph=cover.querySelector(".cover-placeholder");
-      img.onload=()=>{if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
-    }catch{}
+var TOKEN = getTok();
+var searchIndex = []; // [{boxId, boxNote, files:[{name,caption,tags}]}]
+var boxes = [];
+
+function updateAuthUI() {
+  var authBar = document.getElementById("authBar");
+  var signOut = document.getElementById("signOutBtn");
+  var hint = document.getElementById("searchHint");
+  if (TOKEN) {
+    authBar.classList.add("hidden");
+    signOut.style.display = "";
+    hint.style.display = "none";
+  } else {
+    authBar.classList.remove("hidden");
+    signOut.style.display = "none";
+    hint.style.display = "";
   }
+}
 
-  function setupCoverLazyLoader(){
-    const token=getTok();if(!token)return;
-    const cards=[...document.querySelectorAll("a.card")];const queue=[];let running=0;const MAX=4;
-    const pump=()=>{while(running<MAX&&queue.length){const card=queue.shift();running++;loadCoverForCard(card,token).finally(()=>{running--;pump();});}};
-    const io=new IntersectionObserver((entries)=>{for(const en of entries){if(en.isIntersecting){io.unobserve(en.target);queue.push(en.target);}}pump();},{rootMargin:"200px"});
-    cards.forEach(c=>io.observe(c));
-  }
-
-  const coerceTags=tags=>{
-    if(Array.isArray(tags))return tags.map(t=>String(t).trim()).filter(Boolean);
-    if(typeof tags==="string")return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
-    return[];
-  };
-
-  function filterByTag(tag){document.getElementById("q").value=tag;applyFilter();document.getElementById("q").focus();}
-
-  function makeCard(box){
-    const a=document.createElement("a");
-    a.className="card";
-    // SPA link format
-    a.href=`box/?id=${box.id}`;
-    a.dataset.boxid=box.id;
-
-    const cover=document.createElement("div");cover.className="cover";
-    const ph=document.createElement("div");ph.className="cover-placeholder";ph.textContent="📦";
-    const label=document.createElement("div");label.className="cover-label";label.textContent=`BOX-${box.id}`;
-    cover.appendChild(ph);cover.appendChild(label);
-
-    const body=document.createElement("div");body.className="card-body";
-    const title=document.createElement("div");title.className="card-title";title.textContent=`BOX-${box.id}`;
-    const note=document.createElement("div");note.className="card-note";note.textContent=box.note||"No description";
-    body.appendChild(title);body.appendChild(note);
-
-    if(box.tags.length){
-      const tagsWrap=document.createElement("div");tagsWrap.className="card-tags";
-      box.tags.forEach(tag=>{const s=document.createElement("span");s.className="tag";s.textContent=tag;
-        s.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();filterByTag(tag);});tagsWrap.appendChild(s);});
-      body.appendChild(tagsWrap);
+document.getElementById("unlockBtn").addEventListener("click", async function() {
+  var tok = document.getElementById("passphraseInput").value.trim();
+  if (!tok) return;
+  var status = document.getElementById("authStatus");
+  status.textContent = "Checking…"; status.className = "auth-status";
+  try {
+    var res = await fetch(checkUrl(tok));
+    if (res.status === 200) {
+      TOKEN = tok; setTok(tok);
+      status.textContent = "✓ Authenticated"; status.className = "auth-status ok";
+      updateAuthUI();
+      await loadSearchIndex();
+      setupCoverLazyLoader();
+    } else {
+      status.textContent = "Incorrect passphrase"; status.className = "auth-status err";
     }
+  } catch(e) { status.textContent = "Error"; status.className = "auth-status err"; }
+});
+document.getElementById("passphraseInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") document.getElementById("unlockBtn").click();
+});
+document.getElementById("signOutBtn").addEventListener("click", function() {
+  clearTok(); TOKEN = ""; searchIndex = []; updateAuthUI();
+  // Reload covers
+  document.querySelectorAll(".cover img").forEach(function(img) { img.remove(); });
+  document.querySelectorAll(".cover-placeholder").forEach(function(p) { p.style.display = ""; });
+  document.getElementById("searchHint").style.display = "";
+});
 
-    a.appendChild(cover);a.appendChild(body);
-    a.dataset.search=[`box-${box.id}`,box.id,box.key||"",box.note||"",box.tags.join(" ")].join(" ").toLowerCase();
-    return a;
+// Load search index
+async function loadSearchIndex() {
+  if (!TOKEN) return;
+  try {
+    var res = await fetch(searchIndexUrl(TOKEN), { cache: "no-store" });
+    if (res.ok) { searchIndex = await res.json(); }
+    else { searchIndex = []; }
+  } catch { searchIndex = []; }
+  // Update card descriptions from index
+  searchIndex.forEach(function(entry) {
+    var card = document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
+    if (!card) return;
+    var desc = card.querySelector(".card-desc");
+    if (desc && entry.boxNote) desc.textContent = entry.boxNote;
+  });
+}
+
+// Cover lazy loader
+function setupCoverLazyLoader() {
+  if (!TOKEN) return;
+  var cards = [...document.querySelectorAll("a.card")];
+  var queue = []; var running = 0; var MAX = 4;
+  var pump = function() {
+    while (running < MAX && queue.length) {
+      var card = queue.shift(); running++;
+      loadCoverForCard(card).finally(function() { running--; pump(); });
+    }
+  };
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(en) { if (en.isIntersecting) { io.unobserve(en.target); queue.push(en.target); } });
+    pump();
+  }, { rootMargin: "200px" });
+  cards.forEach(function(c) { io.observe(c); });
+}
+
+async function loadCoverForCard(card) {
+  var boxId = card.dataset.boxid;
+  var cover = card.querySelector(".cover");
+  if (!boxId || !cover || cover.dataset.loaded) return;
+  cover.dataset.loaded = "1";
+  try {
+    var res = await fetch(mediaListUrl(boxId, TOKEN), { cache: "no-store" });
+    if (!res.ok) return;
+    var arr = await res.json();
+    var first = (Array.isArray(arr) ? arr : []).map(function(x) { return x.name; }).find(isImage);
+    if (!first) return;
+    var img = new Image(); img.loading = "lazy";
+    img.src = mediaFileUrl(boxId, first, TOKEN); img.alt = "BOX-"+boxId;
+    var ph = cover.querySelector(".cover-placeholder");
+    img.onload = function() { if (ph) ph.style.display = "none"; cover.insertBefore(img, cover.querySelector(".cover-label")); };
+  } catch {}
+}
+
+// Search
+var searchTerm = "";
+function doSearch() {
+  var term = normalize(searchTerm);
+  var sr = document.getElementById("searchResults");
+  var grid = document.getElementById("grid");
+  var counter = document.getElementById("counter");
+
+  if (!term) {
+    sr.classList.remove("visible"); sr.innerHTML = "";
+    document.querySelectorAll("a.card").forEach(function(c) { c.classList.remove("hidden"); });
+    counter.textContent = boxes.length + " boxes";
+    document.getElementById("empty").style.display = "none";
+    return;
   }
 
-  function render(list){
-    const grid=document.getElementById("grid");grid.innerHTML="";
-    list.forEach(b=>grid.appendChild(makeCard(b)));
-    document.getElementById("counter").textContent=`${list.length} boxes`;
-    document.getElementById("empty").style.display=list.length?"none":"block";
+  // If no token, just filter cards by box name/note/tags
+  if (!TOKEN || searchIndex.length === 0) {
+    var shown = 0;
+    document.querySelectorAll("a.card").forEach(function(card) {
+      var match = card.dataset.search.includes(term);
+      card.classList.toggle("hidden", !match);
+      if (match) shown++;
+    });
+    sr.classList.remove("visible"); sr.innerHTML = "";
+    counter.textContent = shown + " / " + boxes.length;
+    document.getElementById("empty").style.display = shown ? "none" : "block";
+    return;
   }
 
-  function applyFilter(){
-    const term=normalize(document.getElementById("q").value);
-    const cards=[...document.getElementById("grid").querySelectorAll("a.card")];
-    if(!term){cards.forEach(c=>c.classList.remove("hidden"));document.getElementById("counter").textContent=`${cards.length} boxes`;document.getElementById("empty").style.display="none";return;}
-    let shown=0;
-    for(const card of cards){const ok=card.dataset.search.includes(term);card.classList.toggle("hidden",!ok);if(ok)shown++;}
-    document.getElementById("counter").textContent=`${shown} / ${cards.length}`;
-    document.getElementById("empty").style.display=shown?"none":"block";
-  }
-  document.getElementById("q").addEventListener("input",applyFilter);
+  // Full search using index
+  sr.innerHTML = ""; var results = [];
+  searchIndex.forEach(function(entry) {
+    var boxLabel = "BOX-" + entry.boxId;
+    // Match box note
+    if (entry.boxNote && normalize(entry.boxNote).includes(term)) {
+      results.push({ boxId: entry.boxId, boxLabel: boxLabel, title: boxLabel + " — Notes", sub: "", match: entry.boxNote.slice(0,80), type: "note" });
+    }
+    // Match files
+    (entry.files || []).forEach(function(f) {
+      var nameMatch = normalize(f.name).includes(term);
+      var captionMatch = f.caption && normalize(f.caption).includes(term);
+      var tagMatch = (f.tags||[]).some(function(t) { return normalize(t).includes(term); });
+      if (nameMatch || captionMatch || tagMatch) {
+        var matchText = captionMatch ? f.caption : (tagMatch ? (f.tags||[]).join(", ") : "");
+        results.push({ boxId: entry.boxId, boxLabel: boxLabel, title: f.name, sub: boxLabel, match: matchText, type: "file" });
+      }
+    });
+  });
 
-  async function loadBoxes(){
-    const res=await fetch("boxes.json",{cache:"no-store"});
-    if(!res.ok)throw new Error("boxes.json not found");
-    const data=await res.json();
-    const boxes=Array.isArray(data.boxes)?data.boxes:[];
-    return boxes.map(r=>({id:pad2(parseInt(r.id,10)),key:(r.key||"").trim(),note:(r.note||""),tags:coerceTags(r.tags)}))
-      .sort((a,b)=>parseInt(a.id,10)-parseInt(b.id,10));
+  // Hide grid cards, show results
+  document.querySelectorAll("a.card").forEach(function(c) { c.classList.add("hidden"); });
+
+  if (results.length === 0) {
+    sr.classList.remove("visible");
+    document.getElementById("empty").style.display = "block";
+    counter.textContent = "0 results";
+    return;
   }
 
-  (async()=>{
-    try{render(await loadBoxes());setupCoverLazyLoader();}
-    catch{const fb=[];for(let i=1;i<=50;i++)fb.push({id:pad2(i),key:"",note:"",tags:[]});render(fb);setupCoverLazyLoader();}
-  })();
+  document.getElementById("empty").style.display = "none";
+  counter.textContent = results.length + " results";
+  sr.classList.add("visible");
+
+  results.forEach(function(r) {
+    var a = document.createElement("a");
+    a.className = "search-result-item";
+    a.href = "box/?id=" + r.boxId;
+    var icon = r.type === "note" ? "📝" : "📎";
+    a.innerHTML = '<div class="result-icon">'+icon+'</div>' +
+      '<div class="result-main">' +
+        '<div class="result-title">'+escHtml(r.title)+'</div>' +
+        (r.match ? '<div class="result-match">'+escHtml(r.match.slice(0,100))+'</div>' : '') +
+      '</div>' +
+      '<div class="result-box">'+r.boxLabel+'</div>';
+    sr.appendChild(a);
+  });
+}
+
+function escHtml(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+document.getElementById("q").addEventListener("input", function() {
+  searchTerm = this.value; doSearch();
+});
+
+// Boxes
+const coerceTags = tags => {
+  if (Array.isArray(tags)) return tags.map(t=>String(t).trim()).filter(Boolean);
+  if (typeof tags==="string") return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
+  return [];
+};
+
+function filterByTag(tag) { document.getElementById("q").value=tag; searchTerm=tag; doSearch(); }
+
+function makeCard(box) {
+  var a = document.createElement("a");
+  a.className = "card"; a.href = "box/?id="+box.id; a.dataset.boxid = box.id;
+
+  var cover = document.createElement("div"); cover.className = "cover";
+  var ph = document.createElement("div"); ph.className = "cover-placeholder"; ph.textContent = "📦";
+  var label = document.createElement("div"); label.className = "cover-label"; label.textContent = "BOX-"+box.id;
+  cover.appendChild(ph); cover.appendChild(label);
+
+  var body = document.createElement("div"); body.className = "card-body";
+  var title = document.createElement("div"); title.className = "card-title"; title.textContent = "BOX-"+box.id;
+  var desc = document.createElement("div"); desc.className = "card-desc"; desc.textContent = box.note || "No description";
+  body.appendChild(title); body.appendChild(desc);
+
+  if (box.tags.length) {
+    var tagsWrap = document.createElement("div"); tagsWrap.className = "card-tags";
+    box.tags.forEach(function(tag) {
+      var s = document.createElement("span"); s.className = "tag"; s.textContent = tag;
+      s.addEventListener("click", function(e) { e.preventDefault(); e.stopPropagation(); filterByTag(tag); });
+      tagsWrap.appendChild(s);
+    });
+    body.appendChild(tagsWrap);
+  }
+
+  a.appendChild(cover); a.appendChild(body);
+  a.dataset.search = ["box-"+box.id, box.id, box.key||"", box.note||"", box.tags.join(" ")].join(" ").toLowerCase();
+  return a;
+}
+
+function render(list) {
+  var grid = document.getElementById("grid"); grid.innerHTML = "";
+  list.forEach(function(b) { grid.appendChild(makeCard(b)); });
+  document.getElementById("counter").textContent = list.length + " boxes";
+}
+
+async function loadBoxes() {
+  var res = await fetch("boxes.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("boxes.json not found");
+  var data = await res.json();
+  var list = Array.isArray(data.boxes) ? data.boxes : [];
+  return list.map(function(r) {
+    return { id: pad2(parseInt(r.id,10)), key:(r.key||"").trim(), note:(r.note||""), tags:coerceTags(r.tags) };
+  }).sort(function(a,b) { return parseInt(a.id,10)-parseInt(b.id,10); });
+}
+
+(async function() {
+  try {
+    boxes = await loadBoxes();
+    render(boxes);
+    updateAuthUI();
+    if (TOKEN) {
+      await loadSearchIndex();
+      setupCoverLazyLoader();
+    }
+  } catch(e) {
+    console.error(e);
+    var fb = []; for (var i=1;i<=50;i++) fb.push({id:pad2(i),key:"",note:"",tags:[]});
+    boxes = fb; render(fb); updateAuthUI();
+  }
+})();
 </script>
 </body>
 </html>

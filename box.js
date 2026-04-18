@@ -1,25 +1,23 @@
-// box.js v10 - SPA mode, reads box ID from URL param ?id=XX
+// box.js v11 - search index + global search
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
 
-// Get box ID from URL: ?id=01
 function getBoxIdFromUrl() {
   var params = new URLSearchParams(window.location.search);
   var id = (params.get("id") || "").trim();
   if (/^\d{1,2}$/.test(id)) return id.padStart(2, "0");
   return null;
 }
-
 async function loadBoxesJson() {
   var res = await fetch("../boxes.json", { cache: "no-store" });
   if (!res.ok) throw new Error("boxes.json not found");
   return await res.json();
 }
-function getSavedToken() { try { return (localStorage.getItem(TOKEN_STORAGE_KEY) || "").trim(); } catch { return ""; } }
+function getSavedToken() { try { return (localStorage.getItem(TOKEN_STORAGE_KEY)||"").trim(); } catch { return ""; } }
 function saveToken(t) { try { localStorage.setItem(TOKEN_STORAGE_KEY, t.trim()); } catch {} }
 function clearToken() { try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {} }
-function baseUrl() { return WORKER_BASE.endsWith("/") ? WORKER_BASE : (WORKER_BASE + "/"); }
+function baseUrl() { return WORKER_BASE.endsWith("/") ? WORKER_BASE : (WORKER_BASE+"/"); }
 
 function workerCheckUrl(k,t){var u=new URL(baseUrl()+encodeURIComponent(k));u.searchParams.set(TOKEN_PARAM,t);u.searchParams.set("check","1");return u.toString();}
 function mediaListUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id+"/list");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
@@ -31,6 +29,8 @@ function mediaUploadUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id+"/upload")
 function mediaClearUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id);u.searchParams.set("all","1");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function mediaDeleteOneUrl(id,name,t){var u=new URL(baseUrl()+"media/box-"+id+"/file");u.searchParams.set("name",name);u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function mediaFileUrl(id,name,t){var u=new URL(baseUrl()+"media/box-"+id+"/"+encodeURIComponent(name));u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
+function searchIndexGetUrl(t){var u=new URL(baseUrl()+"search-index");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
+function searchIndexPostUrl(t){var u=new URL(baseUrl()+"search-index");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 
 function ensureModal(){
   if(document.getElementById("authOverlay"))return;
@@ -46,7 +46,7 @@ function ensureModal(){
     '#authBtn{padding:11px 18px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-fg);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}',
     '#authBtn:disabled{opacity:.5}#authErr{margin-top:10px;color:var(--danger);font-size:13px;display:none}',
     '#authFoot{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}',
-    '#authLink{color:var(--muted);text-decoration:none;font-size:13px;font-family:var(--font)}#authLink:hover{color:var(--text)}',
+    '#authLink{color:var(--muted);text-decoration:none;font-size:13px;font-family:var(--font)}',
     '#authClose{color:var(--muted);background:transparent;border:0;cursor:pointer;font-size:13px;font-family:var(--font)}',
     '</style>',
     "<div id='authCard' role='dialog'><div id='authHead'><h3 id='authTitle'>Enter passphrase</h3>",
@@ -90,6 +90,7 @@ function loadHeicUrl(url){
 }
 function checkToken(k,t){return fetch(workerCheckUrl(k,t),{method:"GET",cache:"no-store"}).then(function(r){return r.status===200;});}
 
+// META
 function loadMeta(){
   return fetch(mediaMetaGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.json():{};})
@@ -97,32 +98,69 @@ function loadMeta(){
     .catch(function(){META={};});
 }
 function saveMeta(){
-  return fetch(mediaMetaPostUrl(BOX_ID,TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(META)});
+  return fetch(mediaMetaPostUrl(BOX_ID,TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(META)})
+    .then(function(){return updateSearchIndex();});
 }
 
+// NOTE
+var noteText = "";
 function loadNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
   var status=$("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.text():"";})
-    .then(function(html){el.innerHTML=html||"";if(status)status.textContent=html?"Note loaded":"No note yet";if(typeof updateNotesPreview==="function")updateNotesPreview();})
+    .then(function(html){
+      el.innerHTML=html||"";
+      noteText=(el.innerText||el.textContent||"").trim();
+      if(status)status.textContent=html?"Note loaded":"No note yet";
+      if(typeof updateNotesPreview==="function")updateNotesPreview();
+    })
     .catch(function(){if(status)status.textContent="Could not load note";});
 }
 function saveNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
   var status=$("notesStatus"),btn=$("saveNoteBtn");
   if(btn)btn.disabled=true;if(status)status.textContent="Saving...";
+  noteText=(el.innerText||el.textContent||"").trim();
   return fetch(mediaNotePostUrl(BOX_ID,TOKEN),{method:"POST",headers:{"Content-Type":"text/html;charset=utf-8"},body:el.innerHTML})
-    .then(function(r){if(status)status.textContent=r.ok?"Saved":"Save failed";if(typeof updateNotesPreview==="function")updateNotesPreview();})
+    .then(function(r){
+      if(status)status.textContent=r.ok?"Saved":"Save failed";
+      if(typeof updateNotesPreview==="function")updateNotesPreview();
+      return updateSearchIndex();
+    })
     .catch(function(){if(status)status.textContent="Save failed";})
     .then(function(){if(btn)btn.disabled=false;});
 }
 
+// SEARCH INDEX
+function buildIndexEntry(){
+  var files=[];
+  Object.keys(META).forEach(function(name){
+    var m=META[name]||{};
+    files.push({name:name,caption:m.caption||"",tags:m.tags||[]});
+  });
+  return{boxId:BOX_ID,boxNote:noteText,files:files};
+}
+
+function updateSearchIndex(){
+  // Load current index, update this box's entry, save back
+  return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"})
+    .then(function(r){return r.ok?r.json():[];})
+    .then(function(idx){
+      if(!Array.isArray(idx))idx=[];
+      var found=false;
+      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=buildIndexEntry();found=true;break;}}
+      if(!found)idx.push(buildIndexEntry());
+      return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
+    })
+    .catch(function(e){console.warn("Search index update failed:",e);});
+}
+
+// CONTEXT MENU
 var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeCtxMenu();closeEditModal();}});
-
 function showCtxMenu(e,items){
   e.stopPropagation();closeCtxMenu();
   var menu=document.createElement("div");menu.className="ctxMenu";
@@ -138,6 +176,7 @@ function showCtxMenu(e,items){
   menu.style.left=left+"px";menu.style.top=top+"px";
 }
 
+// EDIT MODAL
 var editingFile=null;
 function openEditModal(name){
   editingFile=name;var m=META[name]||{caption:"",tags:[]};
@@ -151,6 +190,7 @@ function saveEditModal(){
   saveMeta().then(function(){renderFileRow(editingFile);closeEditModal();}).catch(handleErr);
 }
 
+// BULK TAG
 function openBulkTagModal(){$("bulkTagInput").value="";$("bulkTagModal").classList.remove("hidden");$("bulkTagInput").focus();}
 function closeBulkTagModal(){$("bulkTagModal").classList.add("hidden");}
 function saveBulkTags(){
@@ -163,6 +203,7 @@ function saveBulkTags(){
   saveMeta().then(function(){Object.keys(selectedFiles).forEach(function(name){renderFileRow(name);});closeBulkTagModal();}).catch(handleErr);
 }
 
+// SELECTION
 var selectedFiles={};
 function updateActionBar(){
   var keys=Object.keys(selectedFiles);
@@ -184,20 +225,21 @@ function selectAll(){
   updateActionBar();
 }
 
+// LOCAL SEARCH (within this box)
 var searchTerm="";
 function applySearch(){
   var term=searchTerm.toLowerCase().trim();
-  var ne=$("notesEditor");var noteText=ne?(ne.innerText||ne.textContent||"").toLowerCase():"";
   document.querySelectorAll(".fileRow").forEach(function(row){
     var name=(row.dataset.name||"").toLowerCase();
     var m=META[row.dataset.name]||{};
     var caption=(m.caption||"").toLowerCase();
     var tags=(m.tags||[]).join(" ").toLowerCase();
-    var match=!term||name.includes(term)||caption.includes(term)||tags.includes(term)||noteText.includes(term);
+    var match=!term||name.includes(term)||caption.includes(term)||tags.includes(term)||noteText.toLowerCase().includes(term);
     row.classList.toggle("hidden",!match);
   });
 }
 
+// THUMB
 function makeThumb(name,ext,fileUrl){
   var wrap=document.createElement("div");wrap.className="fileThumb";
   if(isImageExt(ext)){
@@ -229,8 +271,7 @@ function attachPopupFollow(wrap,popup){
 }
 
 function renderFileRow(name){
-  var existing=document.querySelector('.fileRow[data-name="'+CSS.escape(name)+'"]');
-  if(!existing)return;
+  var existing=document.querySelector('.fileRow[data-name="'+CSS.escape(name)+'"]');if(!existing)return;
   var m=META[name]||{caption:"",tags:[]};
   var captionEl=existing.querySelector(".fileCaption");if(captionEl)captionEl.textContent=m.caption||"";
   var tagsEl=existing.querySelector(".fileTags");
@@ -298,7 +339,9 @@ function refreshList(){
 function deleteFile(name){
   if(!confirm("Delete \""+name+"\"?"))return;setStatus("Deleting...");
   fetch(mediaDeleteOneUrl(BOX_ID,name,TOKEN),{method:"DELETE"})
-    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Delete failed.");return refreshList();}).catch(handleErr);
+    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Delete failed.");return refreshList();})
+    .then(function(){return updateSearchIndex();})
+    .catch(handleErr);
 }
 function deleteSelected(){
   var names=Object.keys(selectedFiles);if(!names.length)return;
@@ -306,7 +349,7 @@ function deleteSelected(){
   $("actionBar").classList.remove("visible");setStatus("Deleting...");
   var chain=Promise.resolve();
   names.forEach(function(name){chain=chain.then(function(){return fetch(mediaDeleteOneUrl(BOX_ID,name,TOKEN),{method:"DELETE"}).then(function(r){if(r.status===401)throw new Error("unauthorized");});});});
-  chain.then(function(){return refreshList();}).catch(handleErr);
+  chain.then(function(){return refreshList();}).then(function(){return updateSearchIndex();}).catch(handleErr);
 }
 
 function uploadFiles(files){
@@ -352,7 +395,8 @@ function wireButtons(){
   $("clearBtn").onclick=function(){
     if(!confirm("Delete ALL files in this box?"))return;setStatus("Clearing...");
     fetch(mediaClearUrl(BOX_ID,TOKEN),{method:"DELETE"})
-      .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Clear failed.");return refreshList();}).catch(handleErr);
+      .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Clear failed.");return refreshList();})
+      .then(function(){return updateSearchIndex();}).catch(handleErr);
   };
   $("actionDelete").onclick=function(){deleteSelected();};
   $("actionCancel").onclick=function(){clearSelection();};
@@ -376,12 +420,7 @@ function handleErr(e){
 
 function main(){
   BOX_ID=getBoxIdFromUrl();
-  if(!BOX_ID){
-    // No ID — show error
-    document.querySelector("h1") && (document.querySelector("h1").textContent="Box not found");
-    setStatus("No box ID specified. Use ?id=01");
-    return;
-  }
+  if(!BOX_ID){var h=document.querySelector("h1");if(h)h.textContent="Box not found";setStatus("No box ID specified. Use ?id=01");return;}
   $("boxTitle").textContent="BOX-"+BOX_ID;
   var bc=$("breadcrumbCurrent");if(bc)bc.textContent="BOX-"+BOX_ID;
   document.title="BOX-"+BOX_ID;
