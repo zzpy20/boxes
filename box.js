@@ -1,4 +1,4 @@
-// box.js v7 - collapsible notes + grid hover fix + multiselect
+// box.js v8 - Google Drive style list + context menu
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
@@ -137,10 +137,7 @@ function loadHeicUrl(fileUrl) {
   return fetch(fileUrl)
     .then(function(res) { return res.blob(); })
     .then(function(blob) { return window.heic2any({ blob: blob, toType: "image/jpeg", quality: 0.75 }); })
-    .then(function(converted) {
-      var url = URL.createObjectURL(converted);
-      heicCache[fileUrl] = url; return url;
-    });
+    .then(function(converted) { var url = URL.createObjectURL(converted); heicCache[fileUrl] = url; return url; });
 }
 
 function checkToken(kvKey, token) {
@@ -175,21 +172,48 @@ function saveNote() {
   .then(function() { if (btn) btn.disabled = false; });
 }
 
-// ── Selection ──
-var selectedFiles = {};
+// ── Context menu ──
+var activeCtxMenu = null;
+function closeCtxMenu() {
+  if (activeCtxMenu) { activeCtxMenu.remove(); activeCtxMenu = null; }
+}
+document.addEventListener("click", closeCtxMenu);
+document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeCtxMenu(); });
 
-function updateActionBar() {
-  var keys = Object.keys(selectedFiles);
-  var bar = $("actionBar");
-  var count = $("actionCount");
-  if (keys.length > 0) {
-    count.textContent = keys.length + " selected";
-    bar.classList.add("visible");
-  } else {
-    bar.classList.remove("visible");
-  }
+function showCtxMenu(e, items) {
+  e.stopPropagation();
+  closeCtxMenu();
+  var menu = document.createElement("div"); menu.className = "ctxMenu";
+  items.forEach(function(item) {
+    if (item === "divider") {
+      var d = document.createElement("div"); d.className = "ctxDivider"; menu.appendChild(d);
+    } else {
+      var el = document.createElement("div"); el.className = "ctxItem" + (item.danger ? " danger" : "");
+      el.textContent = item.label;
+      el.onclick = function(ev) { ev.stopPropagation(); closeCtxMenu(); item.action(); };
+      menu.appendChild(el);
+    }
+  });
+  document.body.appendChild(menu);
+  activeCtxMenu = menu;
+  // Position
+  var bx = e.clientX, by = e.clientY;
+  var mw = 180, mh = menu.offsetHeight || 120;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var left = bx; var top = by;
+  if (left + mw > vw) left = vw - mw - 8;
+  if (top + mh > vh) top = vh - mh - 8;
+  menu.style.left = left + "px"; menu.style.top = top + "px";
 }
 
+// ── Selection ──
+var selectedFiles = {};
+function updateActionBar() {
+  var keys = Object.keys(selectedFiles);
+  var bar = $("actionBar"); var count = $("actionCount");
+  if (keys.length > 0) { count.textContent = keys.length + " selected"; bar.classList.add("visible"); }
+  else { bar.classList.remove("visible"); }
+}
 function clearSelection() {
   selectedFiles = {};
   document.querySelectorAll(".fileCheck").forEach(function(cb) { cb.checked = false; });
@@ -198,34 +222,26 @@ function clearSelection() {
 }
 
 function makeThumb(name, ext, fileUrl) {
-  var wrap = document.createElement("div");
-  wrap.className = "fileThumb";
+  var wrap = document.createElement("div"); wrap.className = "fileThumb";
   if (isImageExt(ext)) {
     wrap.classList.add("clickable");
     if (isHeicExt(ext)) {
-      var spinner = document.createElement("div");
-      spinner.className = "heic-loading"; spinner.textContent = "HEIC...";
+      var spinner = document.createElement("div"); spinner.className = "heic-loading"; spinner.textContent = "HEIC...";
       wrap.appendChild(spinner);
       loadHeicUrl(fileUrl).then(function(url) {
         wrap.innerHTML = "";
         var img = document.createElement("img"); img.src = url; img.alt = name; img.className = "thumb-img";
         wrap.appendChild(img);
-        var popup2 = makePopup(url);
-        wrap.appendChild(popup2);
-        attachPopupFollow(wrap, popup2);
+        var popup = makePopup(url); wrap.appendChild(popup); attachPopupFollow(wrap, popup);
         wrap.onclick = function(e) { e.stopPropagation(); window.open(url, "_blank"); };
       }).catch(function() { wrap.innerHTML = "🖼"; });
     } else {
       var img = document.createElement("img"); img.src = fileUrl; img.alt = name; img.className = "thumb-img"; img.loading = "lazy";
       wrap.appendChild(img);
-      var popup1 = makePopup(fileUrl);
-      wrap.appendChild(popup1);
-      attachPopupFollow(wrap, popup1);
+      var popup = makePopup(fileUrl); wrap.appendChild(popup); attachPopupFollow(wrap, popup);
       wrap.onclick = function(e) { e.stopPropagation(); window.open(fileUrl, "_blank"); };
     }
-  } else {
-    wrap.textContent = fileIcon(name);
-  }
+  } else { wrap.textContent = fileIcon(name); }
   return wrap;
 }
 
@@ -234,26 +250,29 @@ function makePopup(imgUrl) {
   var popImg = document.createElement("img"); popImg.src = imgUrl; popImg.alt = "";
   popup.appendChild(popImg); return popup;
 }
+
 function attachPopupFollow(wrap, popup) {
   wrap.addEventListener("mousemove", function(e) {
-    var x = e.clientX, y = e.clientY;
-    var pw = 300, ph = 300;
-    var vw = window.innerWidth, vh = window.innerHeight;
-    var left = x + 20; var top = y - ph/2;
-    if (left + pw > vw) left = x - pw - 20;
+    var pw = 300, ph = 300, vw = window.innerWidth, vh = window.innerHeight;
+    var left = e.clientX + 20, top = e.clientY - ph / 2;
+    if (left + pw > vw) left = e.clientX - pw - 20;
     if (top < 8) top = 8;
     if (top + ph > vh - 8) top = vh - ph - 8;
-    popup.style.left = left + "px";
-    popup.style.top = top + "px";
-    popup.style.transform = "none";
+    popup.style.left = left + "px"; popup.style.top = top + "px"; popup.style.transform = "none";
   });
 }
 
+function deleteFile(name) {
+  if (!confirm("Delete \"" + name + "\"?")) return;
+  setStatus("Deleting...");
+  fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method: "DELETE" })
+    .then(function(resp) { if (resp.status === 401) throw new Error("unauthorized"); if (!resp.ok) alert("Delete failed."); return refreshList(); })
+    .catch(handleErr);
+}
+
 function refreshList() {
-  $("files").innerHTML = "";
-  $("empty").style.display = "none";
-  selectedFiles = {}; updateActionBar();
-  setStatus("Loading files...");
+  $("files").innerHTML = ""; $("empty").style.display = "none";
+  selectedFiles = {}; updateActionBar(); setStatus("Loading files...");
   return fetch(mediaListUrl(BOX_ID, TOKEN), { cache: "no-store" })
     .then(function(res) {
       if (res.status === 401) throw new Error("unauthorized");
@@ -272,6 +291,7 @@ function refreshList() {
         var fileUrl = mediaFileUrl(BOX_ID, name, TOKEN);
         var row = document.createElement("div"); row.className = "fileRow";
 
+        // Checkbox
         var cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "fileCheck";
         cb.addEventListener("change", function() {
           if (cb.checked) { selectedFiles[name] = true; row.classList.add("selected"); }
@@ -287,19 +307,18 @@ function refreshList() {
         metaDiv.textContent = fmtBytes(it.size) + (it.lastModified ? " · " + fmtDate(it.lastModified) : "");
         mainDiv.appendChild(nameDiv); mainDiv.appendChild(metaDiv);
 
-        var btns = document.createElement("div"); btns.className = "fileBtns";
-        var openBtn = document.createElement("a"); openBtn.className = "btn sm"; openBtn.href = fileUrl; openBtn.target = "_blank"; openBtn.rel = "noreferrer"; openBtn.textContent = "Open";
-        var delBtn = document.createElement("button"); delBtn.className = "btn sm danger"; delBtn.textContent = "Delete";
-        delBtn.onclick = function(e) {
-          e.stopPropagation();
-          if (!confirm("Delete \"" + name + "\"?")) return;
-          setStatus("Deleting...");
-          fetch(mediaDeleteOneUrl(BOX_ID, name, TOKEN), { method: "DELETE" })
-            .then(function(resp) { if (resp.status === 401) throw new Error("unauthorized"); if (!resp.ok) alert("Delete failed."); return refreshList(); })
-            .catch(handleErr);
+        // Three-dot menu
+        var menuBtn = document.createElement("button"); menuBtn.className = "menuBtn"; menuBtn.textContent = "⋯";
+        menuBtn.title = "More options";
+        menuBtn.onclick = function(e) {
+          showCtxMenu(e, [
+            { label: "Open", action: function() { window.open(fileUrl, "_blank"); } },
+            "divider",
+            { label: "Delete", danger: true, action: function() { deleteFile(name); } }
+          ]);
         };
-        btns.appendChild(openBtn); btns.appendChild(delBtn);
-        row.appendChild(cb); row.appendChild(thumb); row.appendChild(mainDiv); row.appendChild(btns);
+
+        row.appendChild(cb); row.appendChild(thumb); row.appendChild(mainDiv); row.appendChild(menuBtn);
         $("files").appendChild(row);
       });
     });
@@ -407,9 +426,7 @@ function main() {
     var saved = getSavedToken();
     return checkToken(KV_KEY || "dummy", saved || "x").then(function(ok) {
       if (ok && saved) {
-        TOKEN = saved;
-        $("authPill").textContent = "Authenticated";
-        $("authPill").className = "pill ok";
+        TOKEN = saved; $("authPill").textContent = "Authenticated"; $("authPill").className = "pill ok";
         return Promise.all([refreshList(), loadNote()]);
       } else {
         if (saved) clearToken();
@@ -419,8 +436,7 @@ function main() {
               return checkToken(KV_KEY || "dummy", tok).then(function(ok2) {
                 if (!ok2) throw new Error("unauthorized");
                 saveToken(tok); TOKEN = tok;
-                $("authPill").textContent = "Authenticated";
-                $("authPill").className = "pill ok";
+                $("authPill").textContent = "Authenticated"; $("authPill").className = "pill ok";
                 resolve();
                 return Promise.all([refreshList(), loadNote()]);
               });
