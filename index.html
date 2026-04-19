@@ -301,17 +301,6 @@ async function loadSearchIndex(){
     if(!card)return;
     var desc=card.querySelector(".card-desc");
     if(desc&&entry.boxNote&&entry.boxNote.trim())desc.textContent=entry.boxNote.trim().slice(0,200);
-    // Update cover if set
-    if(entry.coverFile){
-      var cover=card.querySelector(".cover");
-      if(cover&&!cover.dataset.loaded){
-        cover.dataset.loaded="1";
-        var img=new Image();img.loading="lazy";
-        img.src=mediaFileUrl(entry.boxId,entry.coverFile,TOKEN);
-        var ph=cover.querySelector(".cover-placeholder");
-        img.onload=function(){if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
-      }
-    }
   });
 }
 
