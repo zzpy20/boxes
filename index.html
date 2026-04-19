@@ -383,26 +383,22 @@ function setupCoverLazyLoader(){
 async function loadCover(card){
   var boxId=card.dataset.boxid;var cover=card.querySelector(".cover");
   if(!boxId||!cover||cover.dataset.loaded)return;
-  // Check if search index has a cover for this box
+  cover.dataset.loaded="1";
+  // Always check search index first for coverFile
   var entry=searchIndex.find(function(e){return e.boxId===boxId;});
   var coverFile=entry&&entry.coverFile;
-  if(coverFile){
-    cover.dataset.loaded="1";
-    var img=new Image();img.loading="lazy";img.src=mediaFileUrl(boxId,coverFile,TOKEN);img.alt="BOX-"+boxId;
-    var ph=cover.querySelector(".cover-placeholder");
+  var ph=cover.querySelector(".cover-placeholder");
+  function showImg(url){
+    var img=new Image();img.loading="lazy";img.src=url;img.alt="BOX-"+boxId;
     img.onload=function(){if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
-    return;
   }
-  // Auto-detect: use first image
-  cover.dataset.loaded="1";
+  if(coverFile){showImg(mediaFileUrl(boxId,coverFile,TOKEN));return;}
+  // Auto-detect: use first image from list
   try{
     var res=await fetch(mediaListUrl(boxId,TOKEN),{cache:"no-store"});if(!res.ok)return;
     var arr=await res.json();
     var first=(Array.isArray(arr)?arr:[]).map(function(x){return x.name;}).find(isImg);
-    if(!first)return;
-    var img2=new Image();img2.loading="lazy";img2.src=mediaFileUrl(boxId,first,TOKEN);img2.alt="BOX-"+boxId;
-    var ph2=cover.querySelector(".cover-placeholder");
-    img2.onload=function(){if(ph2)ph2.style.display="none";cover.insertBefore(img2,cover.querySelector(".cover-label"));};
+    if(first)showImg(mediaFileUrl(boxId,first,TOKEN));
   }catch{}
 }
 
