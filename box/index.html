@@ -190,6 +190,8 @@
     .link-icon-btn{width:34px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font);}
     .link-icon-btn:hover{opacity:0.7;}
     .link-icon-btn.danger{color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg);}
+    .sort-select{font-family:var(--font);font-size:12px;font-weight:500;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;outline:none;}
+    .sort-select:focus{border-color:var(--text);}
   </style>
 </head>
 <body>
@@ -281,6 +283,12 @@
             <button class="btn sm active" id="btnList" onclick="setView('list')" title="List">☰</button>
             <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid">⊞</button>
           </div>
+          <select class="sort-select" id="sortSelect" title="Sort by">
+            <option value="name">Name</option>
+            <option value="size">Size</option>
+            <option value="date">Date added</option>
+          </select>
+          <button class="btn sm" id="sortDirBtn" title="Toggle sort direction">▲</button>
         </div>
         <div class="files-actions">
           <input id="fileIn" type="file" style="display:none" multiple />

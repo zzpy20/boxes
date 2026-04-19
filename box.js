@@ -280,6 +280,21 @@ function selectAll(){
   });updateActionBar();
 }
 
+var sortField=localStorage.getItem("boxSortField")||"name";
+var sortDir=localStorage.getItem("boxSortDir")||"asc";
+function applySortToArray(arr){
+  arr.sort(function(a,b){
+    var av,bv;
+    if(sortField==="size"){av=a.size||0;bv=b.size||0;return sortDir==="asc"?av-bv:bv-av;}
+    if(sortField==="date"){av=a.lastModified||"";bv=b.lastModified||"";return sortDir==="asc"?av.localeCompare(bv):bv.localeCompare(av);}
+    av=(a.name||"").toLowerCase();bv=(b.name||"").toLowerCase();
+    return sortDir==="asc"?av.localeCompare(bv):bv.localeCompare(av);
+  });
+}
+function setSortField(f){sortField=f;localStorage.setItem("boxSortField",f);updateSortUI();refreshList().catch(handleErr);}
+function toggleSortDir(){sortDir=sortDir==="asc"?"desc":"asc";localStorage.setItem("boxSortDir",sortDir);updateSortUI();refreshList().catch(handleErr);}
+function updateSortUI(){var sel=$("sortSelect");if(sel)sel.value=sortField;var btn=$("sortDirBtn");if(btn)btn.textContent=sortDir==="asc"?"▲":"▼";}
+
 var searchTerm="";
 function applySearch(){
   var term=searchTerm.toLowerCase().trim();
@@ -339,7 +354,7 @@ function refreshList(){
     .then(function(arr){
       if(!Array.isArray(arr)||arr.length===0){$("empty").style.display="block";setStatus("No files in this box.");return;}
       setStatus(arr.length+" file"+(arr.length===1?"":"s"));
-      arr.sort(function(a,b){return(a.name||"").localeCompare(b.name||"");});
+      applySortToArray(arr);
       arr.forEach(function(it){
         var name=it.name||"",ext=name.split(".").pop().toLowerCase();
         var fileUrl=mediaFileUrl(BOX_ID,name,TOKEN);
@@ -470,6 +485,9 @@ function wireButtons(){
   var rni=$("renameNewName");if(rni)rni.addEventListener("keydown",function(e){if(e.key==="Enter")doRename();});
   var saib=$("saveInfoBtn");if(saib)saib.onclick=function(){saveBoxInfo().catch(handleErr);};
   var alb=$("addLinkBtn");if(alb)alb.onclick=function(){addLinkRow("","");};
+  var ss=$("sortSelect");if(ss)ss.onchange=function(){setSortField(this.value);};
+  var sdb=$("sortDirBtn");if(sdb)sdb.onclick=function(){toggleSortDir();};
+  updateSortUI();
   var si=$("searchInput");if(si){si.addEventListener("input",function(){searchTerm=si.value;applySearch();});}
 }
 
