@@ -622,7 +622,6 @@ function render(list){
   var grid=document.getElementById("grid");grid.innerHTML="";
   list.forEach(function(b){grid.appendChild(makeCard(b));});
   document.getElementById("counter").textContent=list.length+" boxes";
-  if(TOKEN)setupCoverLazyLoader();
 }
 
 async function loadBoxes(){
