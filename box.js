@@ -111,28 +111,23 @@ function saveNote(){
     .catch(function(){if(st)st.textContent="Save failed";}).then(function(){if(btn)btn.disabled=false;});
 }
 
-function buildIndexEntry(){
-  var files=[];
-  document.querySelectorAll(".fileRow").forEach(function(row){
-    var name=row.dataset.name;if(!name)return;
-    var m=META[name]||{};files.push({name:name,caption:m.caption||"",tags:m.tags||[]});
-  });
-  return{boxId:BOX_ID,boxNote:noteText,files:files};
-}
 function updateSearchIndex(){
-  return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"})
-    .then(function(r){return r.ok?r.json():[];})
-    .then(function(idx){
-      if(!Array.isArray(idx))idx=[];
-      // Preserve coverFile from existing entry
-      var existing=idx.find(function(e){return e.boxId===BOX_ID;});
-      var entry=buildIndexEntry();
-      if(existing)entry.coverFile=existing.coverFile||"";
-      var found=false;
-      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
-      if(!found)idx.push(entry);
-      return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
-    }).catch(function(e){console.warn("Search index update failed:",e);});
+  return Promise.all([
+    fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[];}),
+    fetch(mediaListUrl(BOX_ID,TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[]; })
+  ]).then(function(results){
+    var idx=results[0],fileList=results[1];
+    if(!Array.isArray(idx))idx=[];
+    if(!Array.isArray(fileList))fileList=[];
+    var files=fileList.map(function(f){var m=META[f.name]||{};return{name:f.name,caption:m.caption||"",tags:m.tags||[]};});
+    var entry={boxId:BOX_ID,boxNote:noteText,files:files};
+    var existing=idx.find(function(e){return e.boxId===BOX_ID;});
+    if(existing)entry.coverFile=existing.coverFile||"";
+    var found=false;
+    for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
+    if(!found)idx.push(entry);
+    return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
+  }).catch(function(e){console.warn("Search index update failed:",e);});
 }
 
 var activeCtxMenu=null;
