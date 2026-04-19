@@ -291,26 +291,35 @@ document.getElementById("signOutBtn").addEventListener("click",function(){
   doSearch();
 });
 
-async function loadSearchIndex(){
-  if(!TOKEN)return;
-  try{var res=await fetch(searchIndexUrl(TOKEN),{cache:"no-store"});if(res.ok)searchIndex=await res.json();else searchIndex=[];}
-  catch{searchIndex=[];}
-  // Update cards from index
+function getBoxConfig(){
+  return searchIndex.find(function(e){return e.boxId==="_config";})||{boxId:"_config",customBoxes:[],deletedIds:[]};
+}
+function saveBoxConfig(cfg){
+  var i=searchIndex.findIndex(function(e){return e.boxId==="_config";});
+  if(i>=0)searchIndex[i]=cfg;else searchIndex.push(cfg);
+  return fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(searchIndex)});
+}
+
+function applySearchIndexToCards(){
   searchIndex.forEach(function(entry){
+    if(entry.boxId==="_config")return;
     var card=document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
     if(!card)return;
     var displayText=((entry.boxDesc||(entry.boxNote||"")).trim()).slice(0,200);
     var descEl=card.querySelector(".card-desc");
     if(descEl&&displayText)descEl.textContent=displayText;
     var tags=entry.boxTags||[];
-    if(tags.length){
-      var tw=card.querySelector(".card-tags");
-      if(!tw){tw=document.createElement("div");tw.className="card-tags";card.querySelector(".card-body").appendChild(tw);}
-      tw.innerHTML="";
-      tags.forEach(function(tag){var s=document.createElement("span");s.className="tag";s.textContent=tag;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);});
-    }
+    var tw=card.querySelector(".card-tags");
+    if(tw){tw.innerHTML="";tags.forEach(function(tag){var s=document.createElement("span");s.className="tag";s.textContent=tag;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);});}
     card.dataset.search=["box-"+entry.boxId,entry.boxId,displayText,tags.join(" ")].join(" ").toLowerCase();
   });
+}
+
+async function loadSearchIndex(){
+  if(!TOKEN)return;
+  try{var res=await fetch(searchIndexUrl(TOKEN),{cache:"no-store"});if(res.ok)searchIndex=await res.json();else searchIndex=[];}
+  catch{searchIndex=[];}
+  applySearchIndexToCards();
 }
 
 // Rebuild search index - iterate all boxes
@@ -346,12 +355,12 @@ async function rebuildSearchIndex(){
       }
       // Preserve fields set via edit modal
       var existingEntry=searchIndex.find(function(e){return e.boxId===box.id;});
-      var coverFile=(existingEntry&&existingEntry.coverFile)||"";
-      var boxDesc=(existingEntry&&existingEntry.boxDesc)||"";
-      var boxTags=(existingEntry&&existingEntry.boxTags)||[];
-      newIndex.push({boxId:box.id,boxNote:noteText,boxDesc:boxDesc,boxTags:boxTags,files:files,coverFile:coverFile});
+      newIndex.push(Object.assign({},existingEntry||{},{boxId:box.id,boxNote:noteText,files:files}));
     }catch(e){console.warn("BOX-"+box.id+" failed:",e);}
   }
+  // Preserve _config entry
+  var cfgEntry=searchIndex.find(function(e){return e.boxId==="_config";});
+  if(cfgEntry)newIndex.push(cfgEntry);
   fill.style.width="100%";label.textContent="Saving…";
   await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newIndex)});
   searchIndex=newIndex;
@@ -468,7 +477,8 @@ document.getElementById("editBoxSave").addEventListener("click",async function()
   var card=document.querySelector('a.card[data-boxid="'+editingBoxId+'"]');
   if(card){
     var descEl=card.querySelector(".card-desc");if(descEl)descEl.textContent=desc||"No description";
-    var tagsEl=card.querySelector(".card-tags");if(tagsEl){tagsEl.innerHTML="";tags.forEach(function(t){var s=document.createElement("span");s.className="tag";s.textContent=t;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(t);});tagsEl.appendChild(s);});}
+    var tagsEl=card.querySelector(".card-tags");
+    if(tagsEl){tagsEl.innerHTML="";tags.forEach(function(t){var s=document.createElement("span");s.className="tag";s.textContent=t;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(t);});tagsEl.appendChild(s);});}
     card.dataset.search=["box-"+editingBoxId,editingBoxId,desc,tags.join(" ")].join(" ").toLowerCase();
     // Update cover
     var cover=card.querySelector(".cover");
@@ -490,12 +500,13 @@ document.getElementById("editBoxSave").addEventListener("click",async function()
 document.getElementById("deleteBoxBtn").addEventListener("click",async function(){
   if(!confirm("Remove BOX-"+editingBoxId+" from the list? (Files in R2 are not deleted)"))return;
   allBoxes=allBoxes.filter(function(b){return b.id!==editingBoxId;});
-  searchIndex=searchIndex.filter(function(e){return e.boxId!==editingBoxId;});
-  await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(searchIndex)});
+  var cfg=getBoxConfig();
+  cfg.deletedIds=(cfg.deletedIds||[]).filter(function(id){return id!==editingBoxId;});
+  cfg.deletedIds.push(editingBoxId);
+  cfg.customBoxes=(cfg.customBoxes||[]).filter(function(b){return b.id!==editingBoxId;});
+  saveBoxConfig(cfg);
   render(allBoxes);
   document.getElementById("editBoxModal").classList.add("hidden");
-  // Note: boxes.json on GitHub not auto-updated; user needs to manually update or we show a note
-  alert("BOX-"+editingBoxId+" removed from view. Remember to update boxes.json to make permanent.");
 });
 
 // Add box
@@ -508,7 +519,7 @@ document.getElementById("addBoxBtn").addEventListener("click",function(){
 });
 document.getElementById("addBoxCancel").addEventListener("click",function(){document.getElementById("addBoxModal").classList.add("hidden");});
 document.getElementById("addBoxModal").addEventListener("click",function(e){if(e.target===this)this.classList.add("hidden");});
-document.getElementById("addBoxSave").addEventListener("click",function(){
+document.getElementById("addBoxSave").addEventListener("click",async function(){
   var idVal=document.getElementById("newBoxId").value.trim();
   var num=parseInt(idVal,10);
   if(!num||num<1){alert("Please enter a valid box number.");return;}
@@ -516,12 +527,22 @@ document.getElementById("addBoxSave").addEventListener("click",function(){
   if(allBoxes.find(function(b){return b.id===newId;})){alert("BOX-"+newId+" already exists.");return;}
   var desc=document.getElementById("newBoxDesc").value.trim();
   var tags=document.getElementById("newBoxTags").value.split(",").map(function(t){return t.trim();}).filter(Boolean);
-  var newBox={id:newId,key:"",note:desc,tags:tags};
-  allBoxes.push(newBox);
+  allBoxes.push({id:newId,key:"",note:"",tags:[]});
   allBoxes.sort(function(a,b){return parseInt(a.id,10)-parseInt(b.id,10);});
+  // Persist to KV config
+  var cfg=getBoxConfig();
+  cfg.customBoxes=(cfg.customBoxes||[]).filter(function(b){return b.id!==newId;});
+  cfg.customBoxes.push({id:newId});
+  cfg.deletedIds=(cfg.deletedIds||[]).filter(function(id){return id!==newId;});
+  saveBoxConfig(cfg);
+  // Save description and tags to search index
+  var si=searchIndex.findIndex(function(e){return e.boxId===newId;});
+  if(si>=0){searchIndex[si].boxDesc=desc;searchIndex[si].boxTags=tags;}
+  else searchIndex.push({boxId:newId,boxDesc:desc,boxTags:tags,files:[],boxNote:""});
+  await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(searchIndex)});
   render(allBoxes);
+  applySearchIndexToCards();
   document.getElementById("addBoxModal").classList.add("hidden");
-  alert("BOX-"+newId+" added! Remember to update boxes.json to make permanent.");
 });
 
 // Search
@@ -553,6 +574,7 @@ function doSearch(){
   fileResultsList.innerHTML="";var fileMatches=[];
   if(TOKEN&&searchIndex.length>0){
     searchIndex.forEach(function(entry){
+      if(entry.boxId==="_config")return;
       if(entry.boxNote&&norm(entry.boxNote).includes(term)){
         fileMatches.push({boxId:entry.boxId,name:"Notes · BOX-"+entry.boxId,caption:entry.boxNote.slice(0,80),type:"note"});
       }
@@ -608,14 +630,12 @@ function makeCard(box){
   var desc=document.createElement("div");desc.className="card-desc";desc.textContent=box.note||"No description";
   body.appendChild(title);body.appendChild(desc);
 
-  if(box.tags&&box.tags.length){
-    var tw=document.createElement("div");tw.className="card-tags";
-    box.tags.forEach(function(tag){
-      var s=document.createElement("span");s.className="tag";s.textContent=tag;
-      s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);
-    });
-    body.appendChild(tw);
-  }
+  var tw=document.createElement("div");tw.className="card-tags";
+  (box.tags||[]).forEach(function(tag){
+    var s=document.createElement("span");s.className="tag";s.textContent=tag;
+    s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);
+  });
+  body.appendChild(tw);
 
   a.appendChild(cover);a.appendChild(adminBtns);a.appendChild(body);
   a.dataset.search=["box-"+box.id,box.id,box.note||"",coerceTags(box.tags).join(" ")].join(" ").toLowerCase();
@@ -640,7 +660,22 @@ async function loadBoxes(){
 (async function(){
   try{
     allBoxes=await loadBoxes();render(allBoxes);updateAuthUI();
-    if(TOKEN){await loadSearchIndex();setupCoverLazyLoader();}
+    if(TOKEN){
+      await loadSearchIndex();
+      // Apply persistent box additions/deletions stored in _config
+      var cfg=getBoxConfig();
+      var deletedSet=new Set(cfg.deletedIds||[]);
+      var customBoxes=cfg.customBoxes||[];
+      var changed=deletedSet.size>0||customBoxes.length>0;
+      if(changed){
+        allBoxes=allBoxes.filter(function(b){return!deletedSet.has(b.id);});
+        customBoxes.forEach(function(cb){if(!allBoxes.find(function(x){return x.id===cb.id;}))allBoxes.push({id:cb.id,key:"",note:"",tags:[]});});
+        allBoxes.sort(function(a,b){return parseInt(a.id,10)-parseInt(b.id,10);});
+        render(allBoxes);
+        applySearchIndexToCards();
+      }
+      setupCoverLazyLoader();
+    }
     doSearch();
   }catch(e){console.error(e);}
 })();
