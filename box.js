@@ -1,4 +1,4 @@
-// box.js v13 - bigger checkbox, multiline caption, search index
+// box.js v14 - rename, UID, links
 const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY="boxes_auth_token";
 const TOKEN_PARAM="t";
@@ -20,6 +20,7 @@ function mediaUploadUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id+"/upload")
 function mediaClearUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id);u.searchParams.set("all","1");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function mediaDeleteOneUrl(id,name,t){var u=new URL(baseUrl()+"media/box-"+id+"/file");u.searchParams.set("name",name);u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function mediaFileUrl(id,name,t){var u=new URL(baseUrl()+"media/box-"+id+"/"+encodeURIComponent(name));u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
+function mediaRenameUrl(id,from,to,t){var u=new URL(baseUrl()+"media/box-"+id+"/rename");u.searchParams.set("from",from);u.searchParams.set("to",to);u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function searchIndexGetUrl(t){var u=new URL(baseUrl()+"search-index");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 function searchIndexPostUrl(t){var u=new URL(baseUrl()+"search-index");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
 
@@ -131,10 +132,92 @@ function updateSearchIndex(){
   }).catch(function(e){console.warn("Search index update failed:",e);});
 }
 
+var renamingFile=null;
+function openRenameModal(name){
+  renamingFile=name;
+  $("renameOldName").textContent=name;
+  $("renameNewName").value=name;
+  $("renameModal").classList.remove("hidden");
+  var inp=$("renameNewName");setTimeout(function(){inp.focus();inp.select();},50);
+}
+function closeRenameModal(){$("renameModal").classList.add("hidden");renamingFile=null;}
+function doRename(){
+  if(!renamingFile)return;
+  var newName=($("renameNewName").value||"").trim();
+  if(!newName||newName===renamingFile){closeRenameModal();return;}
+  setStatus("Renaming...");
+  fetch(mediaRenameUrl(BOX_ID,renamingFile,newName,TOKEN),{method:"POST"})
+    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("rename_failed");})
+    .then(function(){if(META[renamingFile]){META[newName]=META[renamingFile];delete META[renamingFile];}return saveMeta();})
+    .then(function(){return refreshList();})
+    .then(function(){closeRenameModal();})
+    .catch(handleErr);
+}
+
+function loadBoxInfo(){
+  return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[];})
+    .then(function(idx){
+      if(!Array.isArray(idx))idx=[];
+      var entry=idx.find(function(e){return e.boxId===BOX_ID;})||{};
+      var uid=entry.boxUid||"";
+      var links=Array.isArray(entry.boxLinks)?entry.boxLinks:[];
+      $("infoUid").value=uid;
+      renderLinkRows(links);
+      updateInfoPreview(uid,links);
+    }).catch(function(e){console.warn("loadBoxInfo failed:",e);});
+}
+function saveBoxInfo(){
+  var uid=($("infoUid").value||"").trim();
+  var links=getLinkRows();
+  var st=$("infoStatus");if(st)st.textContent="Saving...";
+  return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[];})
+    .then(function(idx){
+      if(!Array.isArray(idx))idx=[];
+      var existing=idx.find(function(e){return e.boxId===BOX_ID;});
+      var entry=Object.assign({},existing||{},{boxId:BOX_ID,boxUid:uid,boxLinks:links});
+      var found=false;
+      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
+      if(!found)idx.push(entry);
+      return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
+    }).then(function(){updateInfoPreview(uid,links);if(st)st.textContent="Saved ✓";})
+    .catch(function(e){if(st)st.textContent="Save failed";console.warn(e);});
+}
+function updateInfoPreview(uid,links){
+  var p=$("infoPreview");if(!p)return;
+  var parts=[];if(uid)parts.push(uid);if(links&&links.length)parts.push(links.length+" link"+(links.length===1?"":"s"));
+  p.textContent=parts.length?parts.join(" · "):"UID, links…";
+}
+function renderLinkRows(links){
+  var c=$("linkRows");if(!c)return;c.innerHTML="";
+  (links||[]).forEach(function(lk){addLinkRow(lk.label||"",lk.url||"");});
+}
+function addLinkRow(label,url){
+  var c=$("linkRows");if(!c)return;
+  var row=document.createElement("div");row.className="link-row";
+  var labelIn=document.createElement("input");labelIn.type="text";labelIn.className="editInput link-label";labelIn.placeholder="Label";labelIn.value=label||"";
+  var urlIn=document.createElement("input");urlIn.type="url";urlIn.className="editInput link-url";urlIn.placeholder="https://…";urlIn.value=url||"";
+  var openBtn=document.createElement("button");openBtn.className="link-icon-btn";openBtn.type="button";openBtn.title="Open link";openBtn.textContent="↗";
+  openBtn.onclick=function(){var v=(urlIn.value||"").trim();if(v)window.open(v,"_blank");};
+  var removeBtn=document.createElement("button");removeBtn.className="link-icon-btn danger";removeBtn.type="button";removeBtn.title="Remove";removeBtn.textContent="✕";
+  removeBtn.onclick=function(){row.remove();};
+  row.appendChild(labelIn);row.appendChild(urlIn);row.appendChild(openBtn);row.appendChild(removeBtn);
+  c.appendChild(row);
+}
+function getLinkRows(){
+  var c=$("linkRows");if(!c)return[];
+  var result=[];
+  c.querySelectorAll(".link-row").forEach(function(row){
+    var url=((row.querySelector(".link-url")||{}).value||"").trim();
+    var label=((row.querySelector(".link-label")||{}).value||"").trim();
+    if(url)result.push({label:label,url:url});
+  });
+  return result;
+}
+
 var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeCtxMenu();closeEditModal();}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();}});
 function showCtxMenu(e,items){
   e.stopPropagation();closeCtxMenu();
   var menu=document.createElement("div");menu.className="ctxMenu";
@@ -292,6 +375,7 @@ function refreshList(){
           showCtxMenu(e,[
             {label:"Open file",action:function(){window.open(fileUrl,"_blank");}},
             {label:"Edit info",action:function(){openEditModal(name);}},
+            {label:"Rename",action:function(){openRenameModal(name);}},
             "divider",
             {label:"Delete",danger:true,action:function(){deleteFile(name);}}
           ]);
@@ -380,6 +464,12 @@ function wireButtons(){
   $("bulkTagCancel").onclick=function(){closeBulkTagModal();};
   $("bulkTagSave").onclick=function(){saveBulkTags();};
   $("bulkTagModal").addEventListener("click",function(e){if(e.target===$("bulkTagModal"))closeBulkTagModal();});
+  $("renameCancel").onclick=function(){closeRenameModal();};
+  $("renameSave").onclick=function(){doRename();};
+  $("renameModal").addEventListener("click",function(e){if(e.target===$("renameModal"))closeRenameModal();});
+  var rni=$("renameNewName");if(rni)rni.addEventListener("keydown",function(e){if(e.key==="Enter")doRename();});
+  var saib=$("saveInfoBtn");if(saib)saib.onclick=function(){saveBoxInfo().catch(handleErr);};
+  var alb=$("addLinkBtn");if(alb)alb.onclick=function(){addLinkRow("","");};
   var si=$("searchInput");if(si){si.addEventListener("input",function(){searchTerm=si.value;applySearch();});}
 }
 
@@ -408,7 +498,7 @@ function main(){
     return checkToken(KV_KEY||"dummy",saved||"x").then(function(ok){
       if(ok&&saved){
         TOKEN=saved;$("authPill").textContent="Authenticated";$("authPill").className="pill ok";
-        return Promise.all([loadMeta().then(function(){return refreshList();}),loadNote()]);
+        return Promise.all([loadMeta().then(function(){return refreshList();}),loadNote(),loadBoxInfo()]);
       }else{
         if(saved)clearToken();
         return new Promise(function(resolve){
@@ -416,7 +506,7 @@ function main(){
             return checkToken(KV_KEY||"dummy",tok).then(function(ok2){
               if(!ok2)throw new Error("unauthorized");
               saveToken(tok);TOKEN=tok;$("authPill").textContent="Authenticated";$("authPill").className="pill ok";
-              resolve();return Promise.all([loadMeta().then(function(){return refreshList();}),loadNote()]);
+              resolve();return Promise.all([loadMeta().then(function(){return refreshList();}),loadNote(),loadBoxInfo()]);
             });
           }});
         });

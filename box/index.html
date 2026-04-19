@@ -183,6 +183,13 @@
     .action-bar-btn{font-family:var(--font);font-size:13px;font-weight:500;background:transparent;border:none;cursor:pointer;padding:0;transition:opacity 0.15s;color:rgba(255,255,255,0.85);}
     .action-bar-btn:hover{opacity:0.7;}
     .action-bar-btn.del{color:#FF8080;}
+
+    /* Box info section */
+    .link-row{display:grid;grid-template-columns:1fr 2fr 34px 34px;gap:6px;align-items:center;margin-bottom:8px;}
+    .link-row .editInput{margin-bottom:0;}
+    .link-icon-btn{width:34px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font);}
+    .link-icon-btn:hover{opacity:0.7;}
+    .link-icon-btn.danger{color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg);}
   </style>
 </head>
 <body>
@@ -234,6 +241,29 @@
         <button class="btn primary sm" id="saveNoteBtn">Save note</button>
       </div>
       <div class="boxtags" id="boxtags"></div>
+    </div>
+  </div>
+
+  <div class="card" id="infoCard">
+    <div class="notes-toggle" id="infoToggle" onclick="toggleInfo()">
+      <div class="notes-toggle-left">
+        <span class="notes-toggle-title">Box Info</span>
+        <span class="notes-preview" id="infoPreview">UID, links…</span>
+      </div>
+      <span class="notes-chevron" id="infoChevron">›</span>
+    </div>
+    <div class="notes-body hidden" id="infoBody">
+      <div style="padding-top:16px">
+        <div class="editLabel">Unique Identifier (UID)</div>
+        <input class="editInput" id="infoUid" type="text" placeholder="e.g. STOR-001, UNIT-A3…" />
+        <div class="editLabel" style="margin-top:4px">Links</div>
+        <div id="linkRows"></div>
+        <button class="btn sm" id="addLinkBtn" type="button" style="margin-top:4px">+ Add link</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <span class="notes-status" id="infoStatus">—</span>
+        <button class="btn primary sm" id="saveInfoBtn">Save</button>
+      </div>
     </div>
   </div>
 
@@ -290,6 +320,24 @@
   </div>
 </div>
 
+<!-- Rename file modal -->
+<div class="editModal hidden" id="renameModal">
+  <div class="editCard">
+    <div class="editHead">
+      <div class="editTitle">Rename file</div>
+      <div class="editSubtitle" id="renameOldName">—</div>
+    </div>
+    <div class="editBody">
+      <div class="editLabel">New name</div>
+      <input class="editInput" id="renameNewName" type="text" placeholder="new-filename.jpg" style="margin-bottom:0" />
+    </div>
+    <div class="editFoot">
+      <button class="btn" id="renameCancel">Cancel</button>
+      <button class="btn primary" id="renameSave">Rename</button>
+    </div>
+  </div>
+</div>
+
 <!-- Bulk tag modal -->
 <div class="editModal hidden" id="bulkTagModal">
   <div class="editCard">
@@ -323,10 +371,12 @@
   var notesOpen=false;
   function toggleNotes(){notesOpen=!notesOpen;document.getElementById("notesBody").classList.toggle("hidden",!notesOpen);document.getElementById("notesChevron").style.transform=notesOpen?"rotate(90deg)":"";}
   function updateNotesPreview(){var e=document.getElementById("notesEditor"),p=document.getElementById("notesPreview");if(!e||!p)return;var t=(e.innerText||e.textContent||"").trim().replace(/\s+/g," ");p.textContent=t?(t.length>60?t.slice(0,60)+"…":t):"Click to expand…";}
+  var infoOpen=false;
+  function toggleInfo(){infoOpen=!infoOpen;document.getElementById("infoBody").classList.toggle("hidden",!infoOpen);document.getElementById("infoChevron").style.transform=infoOpen?"rotate(90deg)":"";}
   var currentView=localStorage.getItem("boxView")||"list";
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=6"></script>
+<script src="../box.js?v=7"></script>
 </body>
 </html>

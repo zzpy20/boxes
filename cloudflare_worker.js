@@ -209,6 +209,21 @@ async function handleMedia(request, env, origin, tokenOk) {
     return json({ ok: true }, 200, corsHeaders(origin));
   }
 
+  // RENAME FILE
+  if (parts.length === 3 && parts[2] === "rename" && request.method === "POST") {
+    const fromName = sanitizeFilename(safeDecodePathPart(url.searchParams.get("from") || ""));
+    const toName = sanitizeFilename(safeDecodePathPart(url.searchParams.get("to") || ""));
+    if (!fromName || !toName) return json({ ok: false, error: "missing_params" }, 400, corsHeaders(origin));
+    const fromKey = prefix + fromName;
+    const toKey = prefix + toName;
+    const src = await env.BOX_R2.get(fromKey);
+    if (!src) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
+    const ct = src.httpMetadata?.contentType || "application/octet-stream";
+    await env.BOX_R2.put(toKey, src.body, { httpMetadata: { contentType: ct } });
+    await env.BOX_R2.delete(fromKey);
+    return json({ ok: true }, 200, corsHeaders(origin));
+  }
+
   // SAVE FILE (note, _meta, or any raw file path)
   if (request.method === "POST" && parts.length >= 3 && parts[2] !== "upload") {
     const rawFilename = parts.slice(2).map(safeDecodePathPart).join("/");
