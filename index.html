@@ -295,12 +295,21 @@ async function loadSearchIndex(){
   if(!TOKEN)return;
   try{var res=await fetch(searchIndexUrl(TOKEN),{cache:"no-store"});if(res.ok)searchIndex=await res.json();else searchIndex=[];}
   catch{searchIndex=[];}
-  // Update card descriptions from index
+  // Update cards from index
   searchIndex.forEach(function(entry){
     var card=document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
     if(!card)return;
-    var desc=card.querySelector(".card-desc");
-    if(desc&&entry.boxNote&&entry.boxNote.trim())desc.textContent=entry.boxNote.trim().slice(0,200);
+    var displayText=((entry.boxDesc||(entry.boxNote||"")).trim()).slice(0,200);
+    var descEl=card.querySelector(".card-desc");
+    if(descEl&&displayText)descEl.textContent=displayText;
+    var tags=entry.boxTags||[];
+    if(tags.length){
+      var tw=card.querySelector(".card-tags");
+      if(!tw){tw=document.createElement("div");tw.className="card-tags";card.querySelector(".card-body").appendChild(tw);}
+      tw.innerHTML="";
+      tags.forEach(function(tag){var s=document.createElement("span");s.className="tag";s.textContent=tag;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);});
+    }
+    card.dataset.search=["box-"+entry.boxId,entry.boxId,displayText,tags.join(" ")].join(" ").toLowerCase();
   });
 }
 
@@ -335,21 +344,24 @@ async function rebuildSearchIndex(){
           });
         }
       }
-      // Get existing cover setting
+      // Preserve fields set via edit modal
       var existingEntry=searchIndex.find(function(e){return e.boxId===box.id;});
       var coverFile=(existingEntry&&existingEntry.coverFile)||"";
-      newIndex.push({boxId:box.id,boxNote:noteText,files:files,coverFile:coverFile});
+      var boxDesc=(existingEntry&&existingEntry.boxDesc)||"";
+      var boxTags=(existingEntry&&existingEntry.boxTags)||[];
+      newIndex.push({boxId:box.id,boxNote:noteText,boxDesc:boxDesc,boxTags:boxTags,files:files,coverFile:coverFile});
     }catch(e){console.warn("BOX-"+box.id+" failed:",e);}
   }
   fill.style.width="100%";label.textContent="Saving…";
   await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(newIndex)});
   searchIndex=newIndex;
-  // Update card descriptions
+  // Update cards
   searchIndex.forEach(function(entry){
     var card=document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
     if(!card)return;
-    var desc=card.querySelector(".card-desc");
-    if(desc&&entry.boxNote&&entry.boxNote.trim())desc.textContent=entry.boxNote.trim().slice(0,200);
+    var displayText=((entry.boxDesc||(entry.boxNote||"")).trim()).slice(0,200);
+    var descEl=card.querySelector(".card-desc");
+    if(descEl&&displayText)descEl.textContent=displayText;
   });
   label.textContent="Done ✓";btn.disabled=false;
   setTimeout(function(){prog.classList.remove("visible");label.textContent="";fill.style.width="0%";},3000);
@@ -398,8 +410,8 @@ async function openEditBoxModal(boxId){
   document.getElementById("editBoxTitle").textContent="Edit BOX-"+boxId;
   // Get current note from search index
   var entry=searchIndex.find(function(e){return e.boxId===boxId;});
-  document.getElementById("editBoxDesc").value=(entry&&entry.boxNote)||box.note||"";
-  document.getElementById("editBoxTags").value=(box.tags||[]).join(", ");
+  document.getElementById("editBoxDesc").value=(entry&&entry.boxDesc)||"";
+  document.getElementById("editBoxTags").value=((entry&&entry.boxTags)||[]).join(", ");
   // Load cover picker
   var picker=document.getElementById("coverPicker");
   picker.innerHTML='<div class="cover-pick-item none-item" data-cover="">📦 No cover</div>';
@@ -443,13 +455,10 @@ document.getElementById("editBoxSave").addEventListener("click",async function()
   var tags=document.getElementById("editBoxTags").value.split(",").map(function(t){return t.trim();}).filter(Boolean);
   var selectedCover=document.querySelector("#coverPicker .cover-pick-item.selected");
   var coverFile=selectedCover?selectedCover.dataset.cover:"";
-  // Update boxes.json note/tags
-  var box=allBoxes.find(function(b){return b.id===editingBoxId;});
-  if(box){box.note=desc;box.tags=tags;}
-  // Update search index entry
+  // Update search index entry (description and tags are stored separately from notes)
   var idx=searchIndex.findIndex(function(e){return e.boxId===editingBoxId;});
-  if(idx>=0){searchIndex[idx].boxNote=desc;searchIndex[idx].coverFile=coverFile;}
-  else{searchIndex.push({boxId:editingBoxId,boxNote:desc,files:[],coverFile:coverFile});}
+  if(idx>=0){searchIndex[idx].boxDesc=desc;searchIndex[idx].boxTags=tags;searchIndex[idx].coverFile=coverFile;}
+  else{searchIndex.push({boxId:editingBoxId,boxDesc:desc,boxTags:tags,files:[],coverFile:coverFile});}
   // Save search index
   await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(searchIndex)});
   // Persist cover to dedicated R2 file so loadCover can find it on reload

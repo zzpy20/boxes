@@ -122,7 +122,7 @@ function updateSearchIndex(){
     var files=fileList.map(function(f){var m=META[f.name]||{};return{name:f.name,caption:m.caption||"",tags:m.tags||[]};});
     var entry={boxId:BOX_ID,boxNote:noteText,files:files};
     var existing=idx.find(function(e){return e.boxId===BOX_ID;});
-    if(existing)entry.coverFile=existing.coverFile||"";
+    if(existing){entry.coverFile=existing.coverFile||"";entry.boxDesc=existing.boxDesc||"";entry.boxTags=existing.boxTags||[];}
     var found=false;
     for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
     if(!found)idx.push(entry);
