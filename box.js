@@ -340,7 +340,10 @@ function uploadFiles(files){
     xhr.onerror=function(){alert("Network error: "+it.f.name);resolve();};xhr.send(fd);
   });});});
   return chain.then(function(){$("uploadBtn").disabled=false;$("fileIn").disabled=false;$("fileIn").value="";return refreshList();})
-    .then(function(){setTimeout(function(){progHost.style.display="none";},800);return updateSearchIndex();});
+    .then(function(){
+      setTimeout(function(){progHost.style.display="none";},800);
+      return updateSearchIndex().then(function(){setStatus("Upload complete · search index updated ✓");});
+    });
 }
 
 function wireDropzone(){
