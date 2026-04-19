@@ -1,23 +1,14 @@
-// box.js v11 - search index + global search
+// box.js v12 - no hover popup, click filename to open, search index
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
 
-function getBoxIdFromUrl() {
-  var params = new URLSearchParams(window.location.search);
-  var id = (params.get("id") || "").trim();
-  if (/^\d{1,2}$/.test(id)) return id.padStart(2, "0");
-  return null;
-}
-async function loadBoxesJson() {
-  var res = await fetch("../boxes.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("boxes.json not found");
-  return await res.json();
-}
-function getSavedToken() { try { return (localStorage.getItem(TOKEN_STORAGE_KEY)||"").trim(); } catch { return ""; } }
-function saveToken(t) { try { localStorage.setItem(TOKEN_STORAGE_KEY, t.trim()); } catch {} }
-function clearToken() { try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {} }
-function baseUrl() { return WORKER_BASE.endsWith("/") ? WORKER_BASE : (WORKER_BASE+"/"); }
+function getBoxIdFromUrl(){var p=new URLSearchParams(window.location.search);var id=(p.get("id")||"").trim();if(/^\d{1,2}$/.test(id))return id.padStart(2,"0");return null;}
+async function loadBoxesJson(){var r=await fetch("../boxes.json",{cache:"no-store"});if(!r.ok)throw new Error("not found");return await r.json();}
+function getSavedToken(){try{return(localStorage.getItem(TOKEN_STORAGE_KEY)||"").trim();}catch{return"";}}
+function saveToken(t){try{localStorage.setItem(TOKEN_STORAGE_KEY,t.trim());}catch{}}
+function clearToken(){try{localStorage.removeItem(TOKEN_STORAGE_KEY);}catch{}}
+function baseUrl(){return WORKER_BASE.endsWith("/")?WORKER_BASE:(WORKER_BASE+"/");}
 
 function workerCheckUrl(k,t){var u=new URL(baseUrl()+encodeURIComponent(k));u.searchParams.set(TOKEN_PARAM,t);u.searchParams.set("check","1");return u.toString();}
 function mediaListUrl(id,t){var u=new URL(baseUrl()+"media/box-"+id+"/list");u.searchParams.set(TOKEN_PARAM,t);return u.toString();}
@@ -34,8 +25,8 @@ function searchIndexPostUrl(t){var u=new URL(baseUrl()+"search-index");u.searchP
 
 function ensureModal(){
   if(document.getElementById("authOverlay"))return;
-  var overlay=document.createElement("div");overlay.id="authOverlay";
-  overlay.innerHTML=['<style>',
+  var o=document.createElement("div");o.id="authOverlay";
+  o.innerHTML=['<style>',
     '#authOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:9999;padding:18px}',
     '#authCard{width:min(400px,100%);background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;overflow:hidden}',
     '#authHead{padding:24px 24px 16px}#authTitle{margin:0;font-size:18px;font-weight:600;font-family:var(--font)}',
@@ -49,29 +40,30 @@ function ensureModal(){
     '#authLink{color:var(--muted);text-decoration:none;font-size:13px;font-family:var(--font)}',
     '#authClose{color:var(--muted);background:transparent;border:0;cursor:pointer;font-size:13px;font-family:var(--font)}',
     '</style>',
-    "<div id='authCard' role='dialog'><div id='authHead'><h3 id='authTitle'>Enter passphrase</h3>",
+    "<div id='authCard'><div id='authHead'><h3 id='authTitle'>Enter passphrase</h3>",
     "<div id='authSub'>This box is protected. Your passphrase will be saved on this device.</div></div>",
     "<div id='authBody'><div id='authRow'><input id='authInput' type='password' autocomplete='current-password' placeholder='Passphrase...'/>",
     "<button id='authBtn'>Unlock</button></div><div id='authErr'>Incorrect passphrase, please try again.</div></div>",
     "<div id='authFoot'><a id='authLink' href='../index.html'>Back to All Boxes</a><button id='authClose'>Close</button></div></div>"
   ].join("");
-  document.body.appendChild(overlay);
-  overlay.addEventListener("click",function(e){if(e.target===overlay)hideModal();});
+  document.body.appendChild(o);
+  o.addEventListener("click",function(e){if(e.target===o)hideModal();});
   document.getElementById("authClose").addEventListener("click",hideModal);
 }
 function showModal(opts){
   var onSubmit=opts&&opts.onSubmit;ensureModal();
-  var overlay=document.getElementById("authOverlay"),input=document.getElementById("authInput"),
+  var o=document.getElementById("authOverlay"),inp=document.getElementById("authInput"),
       btn=document.getElementById("authBtn"),err=document.getElementById("authErr");
-  err.style.display="none";overlay.style.display="flex";input.value="";
-  setTimeout(function(){input.focus();},50);
-  function submit(){var token=(input.value||"").trim();if(!token)return;btn.disabled=true;
-    onSubmit(token).then(function(){hideModal();}).catch(function(){err.style.display="block";btn.disabled=false;input.select();});}
-  btn.onclick=submit;input.onkeydown=function(e){if(e.key==="Enter")submit();};
+  err.style.display="none";o.style.display="flex";inp.value="";
+  setTimeout(function(){inp.focus();},50);
+  function submit(){var tok=(inp.value||"").trim();if(!tok)return;btn.disabled=true;
+    onSubmit(tok).then(function(){hideModal();}).catch(function(){err.style.display="block";btn.disabled=false;inp.select();});}
+  btn.onclick=submit;inp.onkeydown=function(e){if(e.key==="Enter")submit();};
 }
 function hideModal(){var o=document.getElementById("authOverlay");if(o)o.style.display="none";}
 
 var BOX_ID=null,KV_KEY=null,TOKEN=null,META={};
+var noteText="";
 
 function $(id){return document.getElementById(id);}
 function setStatus(t){var el=$("status");if(el)el.textContent=t;}
@@ -90,60 +82,37 @@ function loadHeicUrl(url){
 }
 function checkToken(k,t){return fetch(workerCheckUrl(k,t),{method:"GET",cache:"no-store"}).then(function(r){return r.status===200;});}
 
-// META
 function loadMeta(){
   return fetch(mediaMetaGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
-    .then(function(r){return r.ok?r.json():{};})
-    .then(function(d){META=d||{};})
-    .catch(function(){META={};});
+    .then(function(r){return r.ok?r.json():{};}).then(function(d){META=d||{};}).catch(function(){META={};});
 }
 function saveMeta(){
   return fetch(mediaMetaPostUrl(BOX_ID,TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(META)})
     .then(function(){return updateSearchIndex();});
 }
-
-// NOTE
-var noteText = "";
 function loadNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
-  var status=$("notesStatus");
+  var st=$("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.text():"";})
-    .then(function(html){
-      el.innerHTML=html||"";
-      noteText=(el.innerText||el.textContent||"").trim();
-      if(status)status.textContent=html?"Note loaded":"No note yet";
-      if(typeof updateNotesPreview==="function")updateNotesPreview();
-    })
-    .catch(function(){if(status)status.textContent="Could not load note";});
+    .then(function(html){el.innerHTML=html||"";noteText=(el.innerText||el.textContent||"").trim();if(st)st.textContent=html?"Note loaded":"No note yet";if(typeof updateNotesPreview==="function")updateNotesPreview();})
+    .catch(function(){if(st)st.textContent="Could not load note";});
 }
 function saveNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
-  var status=$("notesStatus"),btn=$("saveNoteBtn");
-  if(btn)btn.disabled=true;if(status)status.textContent="Saving...";
+  var st=$("notesStatus"),btn=$("saveNoteBtn");
+  if(btn)btn.disabled=true;if(st)st.textContent="Saving...";
   noteText=(el.innerText||el.textContent||"").trim();
   return fetch(mediaNotePostUrl(BOX_ID,TOKEN),{method:"POST",headers:{"Content-Type":"text/html;charset=utf-8"},body:el.innerHTML})
-    .then(function(r){
-      if(status)status.textContent=r.ok?"Saved":"Save failed";
-      if(typeof updateNotesPreview==="function")updateNotesPreview();
-      return updateSearchIndex();
-    })
-    .catch(function(){if(status)status.textContent="Save failed";})
-    .then(function(){if(btn)btn.disabled=false;});
+    .then(function(r){if(st)st.textContent=r.ok?"Saved":"Save failed";if(typeof updateNotesPreview==="function")updateNotesPreview();return updateSearchIndex();})
+    .catch(function(){if(st)st.textContent="Save failed";}).then(function(){if(btn)btn.disabled=false;});
 }
 
-// SEARCH INDEX
 function buildIndexEntry(){
-  var files=[];
-  Object.keys(META).forEach(function(name){
-    var m=META[name]||{};
-    files.push({name:name,caption:m.caption||"",tags:m.tags||[]});
-  });
+  var files=[];Object.keys(META).forEach(function(name){var m=META[name]||{};files.push({name:name,caption:m.caption||"",tags:m.tags||[]});});
   return{boxId:BOX_ID,boxNote:noteText,files:files};
 }
-
 function updateSearchIndex(){
-  // Load current index, update this box's entry, save back
   return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.json():[];})
     .then(function(idx){
@@ -152,11 +121,9 @@ function updateSearchIndex(){
       for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=buildIndexEntry();found=true;break;}}
       if(!found)idx.push(buildIndexEntry());
       return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
-    })
-    .catch(function(e){console.warn("Search index update failed:",e);});
+    }).catch(function(e){console.warn("Search index update failed:",e);});
 }
 
-// CONTEXT MENU
 var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
@@ -176,7 +143,6 @@ function showCtxMenu(e,items){
   menu.style.left=left+"px";menu.style.top=top+"px";
 }
 
-// EDIT MODAL
 var editingFile=null;
 function openEditModal(name){
   editingFile=name;var m=META[name]||{caption:"",tags:[]};
@@ -190,7 +156,6 @@ function saveEditModal(){
   saveMeta().then(function(){renderFileRow(editingFile);closeEditModal();}).catch(handleErr);
 }
 
-// BULK TAG
 function openBulkTagModal(){$("bulkTagInput").value="";$("bulkTagModal").classList.remove("hidden");$("bulkTagInput").focus();}
 function closeBulkTagModal(){$("bulkTagModal").classList.add("hidden");}
 function saveBulkTags(){
@@ -203,7 +168,6 @@ function saveBulkTags(){
   saveMeta().then(function(){Object.keys(selectedFiles).forEach(function(name){renderFileRow(name);});closeBulkTagModal();}).catch(handleErr);
 }
 
-// SELECTION
 var selectedFiles={};
 function updateActionBar(){
   var keys=Object.keys(selectedFiles);
@@ -221,11 +185,9 @@ function clearSelection(){
 function selectAll(){
   document.querySelectorAll(".fileRow:not(.hidden) .fileCheck").forEach(function(cb){
     cb.checked=true;var row=cb.closest(".fileRow");if(row){row.classList.add("selected");selectedFiles[row.dataset.name]=true;}
-  });
-  updateActionBar();
+  });updateActionBar();
 }
 
-// LOCAL SEARCH (within this box)
 var searchTerm="";
 function applySearch(){
   var term=searchTerm.toLowerCase().trim();
@@ -239,7 +201,7 @@ function applySearch(){
   });
 }
 
-// THUMB
+// Thumb - no hover popup (use fixed popup only on desktop, no popup in grid)
 function makeThumb(name,ext,fileUrl){
   var wrap=document.createElement("div");wrap.className="fileThumb";
   if(isImageExt(ext)){
@@ -249,12 +211,17 @@ function makeThumb(name,ext,fileUrl){
       loadHeicUrl(fileUrl).then(function(url){
         wrap.innerHTML="";
         var img=document.createElement("img");img.src=url;img.alt=name;img.className="thumb-img";wrap.appendChild(img);
-        var popup=makePopup(url);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
+        // Desktop only: hover popup
+        if(window.matchMedia("(hover:hover)").matches){
+          var popup=makePopup(url);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
+        }
         wrap.onclick=function(e){e.stopPropagation();window.open(url,"_blank");};
       }).catch(function(){wrap.innerHTML="🖼";});
     }else{
       var img=document.createElement("img");img.src=fileUrl;img.alt=name;img.className="thumb-img";img.loading="lazy";wrap.appendChild(img);
-      var popup=makePopup(fileUrl);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
+      if(window.matchMedia("(hover:hover)").matches){
+        var popup=makePopup(fileUrl);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
+      }
       wrap.onclick=function(e){e.stopPropagation();window.open(fileUrl,"_blank");};
     }
   }else{wrap.textContent=fileIcon(name);}
@@ -293,6 +260,7 @@ function refreshList(){
         var m=META[name]||{caption:"",tags:[]};
         var row=document.createElement("div");row.className="fileRow";row.dataset.name=name;
 
+        // Checkbox
         var cb=document.createElement("input");cb.type="checkbox";cb.className="fileCheck";
         cb.addEventListener("change",function(){
           if(cb.checked){selectedFiles[name]=true;row.classList.add("selected");}
@@ -302,7 +270,13 @@ function refreshList(){
 
         var thumb=makeThumb(name,ext,fileUrl);
 
+        // Main - clicking filename opens file
         var mainDiv=document.createElement("div");mainDiv.className="fileMain";
+        mainDiv.style.cursor="pointer";
+        mainDiv.onclick=function(e){
+          if(e.target.closest(".fileCheck"))return;
+          window.open(fileUrl,"_blank");
+        };
         var nameDiv=document.createElement("div");nameDiv.className="fileName";nameDiv.textContent=name;
         var metaDiv=document.createElement("div");metaDiv.className="fileMeta";
         metaDiv.textContent=fmtBytes(it.size)+(it.lastModified?" · "+fmtDate(it.lastModified):"");
@@ -311,24 +285,18 @@ function refreshList(){
         (m.tags||[]).forEach(function(tag){var s=document.createElement("span");s.className="fileTag";s.textContent=tag;tagsDiv.appendChild(s);});
         mainDiv.appendChild(nameDiv);mainDiv.appendChild(metaDiv);mainDiv.appendChild(captionDiv);mainDiv.appendChild(tagsDiv);
 
-        var actions=document.createElement("div");actions.className="fileActions";
-        var editBtn=document.createElement("button");editBtn.className="fileActionBtn";editBtn.title="Edit";editBtn.textContent="✎";
-        editBtn.onclick=function(e){e.stopPropagation();openEditModal(name);};
-        var delBtn=document.createElement("button");delBtn.className="fileActionBtn del";delBtn.title="Delete";delBtn.textContent="✕";
-        delBtn.onclick=function(e){e.stopPropagation();deleteFile(name);};
-        actions.appendChild(editBtn);actions.appendChild(delBtn);
-
+        // Three-dot menu only (no hover action bar)
         var menuBtn=document.createElement("button");menuBtn.className="menuBtn";menuBtn.textContent="⋯";menuBtn.title="More";
         menuBtn.onclick=function(e){
           showCtxMenu(e,[
-            {label:"Open",action:function(){window.open(fileUrl,"_blank");}},
+            {label:"Open file",action:function(){window.open(fileUrl,"_blank");}},
             {label:"Edit info",action:function(){openEditModal(name);}},
             "divider",
             {label:"Delete",danger:true,action:function(){deleteFile(name);}}
           ]);
         };
 
-        row.appendChild(cb);row.appendChild(thumb);row.appendChild(mainDiv);row.appendChild(actions);row.appendChild(menuBtn);
+        row.appendChild(cb);row.appendChild(thumb);row.appendChild(mainDiv);row.appendChild(menuBtn);
         $("files").appendChild(row);
       });
       applySearch();
@@ -340,8 +308,7 @@ function deleteFile(name){
   if(!confirm("Delete \""+name+"\"?"))return;setStatus("Deleting...");
   fetch(mediaDeleteOneUrl(BOX_ID,name,TOKEN),{method:"DELETE"})
     .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Delete failed.");return refreshList();})
-    .then(function(){return updateSearchIndex();})
-    .catch(handleErr);
+    .then(function(){return updateSearchIndex();}).catch(handleErr);
 }
 function deleteSelected(){
   var names=Object.keys(selectedFiles);if(!names.length)return;
@@ -420,7 +387,7 @@ function handleErr(e){
 
 function main(){
   BOX_ID=getBoxIdFromUrl();
-  if(!BOX_ID){var h=document.querySelector("h1");if(h)h.textContent="Box not found";setStatus("No box ID specified. Use ?id=01");return;}
+  if(!BOX_ID){var h=document.querySelector("h1");if(h)h.textContent="Box not found";setStatus("No box ID. Use ?id=01");return;}
   $("boxTitle").textContent="BOX-"+BOX_ID;
   var bc=$("breadcrumbCurrent");if(bc)bc.textContent="BOX-"+BOX_ID;
   document.title="BOX-"+BOX_ID;

@@ -13,6 +13,7 @@
       --bg:#F7F7F5;--surface:#FFFFFF;--surface-2:#F0EFEB;
       --border:rgba(0,0,0,0.07);--border-strong:rgba(0,0,0,0.13);
       --text:#0F0F0E;--muted:#787873;--accent:#0F0F0E;--accent-fg:#FFFFFF;
+      --danger:#A32D2D;
       --tag-bg:#EFEFEB;--tag-text:#3C3C38;--cover-bg:#EEECEA;
       --radius:16px;--radius-sm:10px;
       --font:'DM Sans',-apple-system,sans-serif;--mono:'DM Mono',monospace;
@@ -21,6 +22,7 @@
       --bg:#111110;--surface:#1C1C1A;--surface-2:#242422;
       --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.13);
       --text:#F0EFEB;--muted:#88887F;--accent:#F0EFEB;--accent-fg:#111110;
+      --danger:#F7C1C1;
       --tag-bg:#2A2A27;--tag-text:#B8B8B0;--cover-bg:#252523;
     }}
     body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
@@ -39,23 +41,21 @@
     .btn:hover{opacity:0.7;}
     .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);}
 
-    /* Search */
-    .search-wrap{position:relative;margin-bottom:16px;}
+    .search-wrap{position:relative;margin-bottom:8px;}
     .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
     .search-input{font-family:var(--font);font-size:14px;width:100%;padding:11px 14px 11px 40px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
     .search-input:focus{border-color:var(--border-strong);}
     .search-input::placeholder{color:var(--muted);}
-    .search-hint{font-size:12px;color:var(--muted);margin-bottom:20px;font-family:var(--mono);}
+    .search-meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:20px;min-height:18px;}
 
-    /* Auth bar */
-    .auth-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+    .auth-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
     .auth-bar.hidden{display:none;}
     .auth-bar input{font-family:var(--font);flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-size:14px;outline:none;min-width:160px;}
     .auth-bar input:focus{border-color:var(--text);}
     .auth-label{font-size:13px;color:var(--muted);white-space:nowrap;}
-    .auth-status{font-size:12px;font-family:var(--mono);}
-    .auth-status.ok{color:#3B6D11;}
-    .auth-status.err{color:var(--danger,#A32D2D);}
+    .auth-msg{font-size:12px;font-family:var(--mono);color:var(--muted);}
+    .auth-msg.ok{color:#3B6D11;}
+    .auth-msg.err{color:var(--danger);}
 
     .counter{font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;}
 
@@ -78,16 +78,16 @@
     .tag{font-size:11px;font-weight:500;color:var(--tag-text);background:var(--tag-bg);padding:3px 8px;border-radius:999px;cursor:pointer;border:none;transition:opacity 0.15s;}
     .tag:hover{opacity:0.7;}
 
-    /* Search results */
-    .search-results{margin-bottom:24px;display:none;}
-    .search-results.visible{display:block;}
-    .search-result-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;color:inherit;transition:border-color 0.15s;}
-    .search-result-item:hover{border-color:var(--border-strong);}
+    /* File search results */
+    .results-section{margin-bottom:16px;display:none;}
+    .results-section.visible{display:block;}
+    .results-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:8px;}
+    .result-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;text-decoration:none;color:inherit;transition:border-color 0.15s;}
+    .result-item:hover{border-color:var(--border-strong);}
     .result-icon{font-size:18px;flex-shrink:0;}
     .result-main{min-width:0;flex:1;}
-    .result-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .result-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
-    .result-match{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .result-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .result-caption{font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .result-box{font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0;}
 
     .empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);display:none;}
@@ -108,27 +108,28 @@
     </div>
   </div>
 
-  <!-- Auth bar (shown when not logged in) -->
   <div class="auth-bar" id="authBar">
     <span class="auth-label">Passphrase:</span>
-    <input type="password" id="passphraseInput" placeholder="Enter passphrase to load covers & search…" autocomplete="current-password" />
+    <input type="password" id="passphraseInput" placeholder="Enter passphrase to load covers &amp; enable full search…" autocomplete="current-password" />
     <button class="btn primary" id="unlockBtn">Unlock</button>
-    <span class="auth-status" id="authStatus"></span>
+    <span class="auth-msg" id="authMsg"></span>
   </div>
 
-  <!-- Search -->
   <div class="search-wrap">
     <span class="search-icon">⌕</span>
-    <input class="search-input" id="q" type="search" placeholder="Search all boxes — files, notes, tags, captions…" autocomplete="off" />
+    <input class="search-input" id="q" type="search" placeholder="Search boxes by name, description, tags…" autocomplete="off" />
   </div>
-  <div class="search-hint" id="searchHint">Sign in above to enable full search across all boxes</div>
+  <div class="search-meta" id="searchMeta"></div>
 
-  <!-- Search results (shown when searching) -->
-  <div class="search-results" id="searchResults"></div>
+  <!-- File/note search results (when authenticated + searching) -->
+  <div class="results-section" id="fileResults">
+    <div class="results-label">Files &amp; notes</div>
+    <div id="fileResultsList"></div>
+  </div>
 
   <div class="counter" id="counter">Loading…</div>
   <div class="grid" id="grid"></div>
-  <div class="empty" id="empty">No boxes match your search.</div>
+  <div class="empty" id="empty">No results found.</div>
 </div>
 
 <footer>
@@ -140,274 +141,223 @@
 const TOKEN_KEY = "boxes_auth_token";
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 
-function getTok() { try { return (localStorage.getItem(TOKEN_KEY)||"").trim(); } catch { return ""; } }
-function setTok(t) { try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch {} }
-function clearTok() { try { localStorage.removeItem(TOKEN_KEY); } catch {} }
+function getTok(){try{return(localStorage.getItem(TOKEN_KEY)||"").trim();}catch{return"";}}
+function setTok(t){try{localStorage.setItem(TOKEN_KEY,t.trim());}catch{}}
+function clearTok(){try{localStorage.removeItem(TOKEN_KEY);}catch{}}
+function mediaFileUrl(id,name,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/"+encodeURIComponent(name));u.searchParams.set("t",t);return u.toString();}
+function mediaListUrl(id,t){var u=new URL(WORKER_BASE+"media/box-"+id+"/list");u.searchParams.set("t",t);return u.toString();}
+function searchIndexUrl(t){var u=new URL(WORKER_BASE+"search-index");u.searchParams.set("t",t);return u.toString();}
+function checkUrl(tok){var u=new URL(WORKER_BASE+"dummy");u.searchParams.set("t",tok);u.searchParams.set("check","1");return u.toString();}
 
-function mediaFileUrl(id, name, t) { var u = new URL(WORKER_BASE+"media/box-"+id+"/"+encodeURIComponent(name)); u.searchParams.set("t",t); return u.toString(); }
-function mediaListUrl(id, t) { var u = new URL(WORKER_BASE+"media/box-"+id+"/list"); u.searchParams.set("t",t); return u.toString(); }
-function searchIndexUrl(t) { var u = new URL(WORKER_BASE+"search-index"); u.searchParams.set("t",t); return u.toString(); }
-function checkUrl(t) { var u = new URL(WORKER_BASE+"dummy"); u.searchParams.set("t",t); u.searchParams.set("check","1"); return u.toString(); }
+document.getElementById("stamp").textContent=new Date().toISOString().slice(0,10);
+const pad2=n=>String(n).padStart(2,"0");
+const norm=s=>(s||"").toString().trim().toLowerCase();
+function isImg(name){return["jpg","jpeg","png","gif","webp","avif"].includes((name||"").split(".").pop().toLowerCase());}
+function escH(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
-document.getElementById("stamp").textContent = new Date().toISOString().slice(0,10);
+var TOKEN=getTok();
+var searchIndex=[];
+var allBoxes=[];
 
-const pad2 = n => String(n).padStart(2,"0");
-const normalize = s => (s||"").toString().trim().toLowerCase();
-function isImage(name) { return ["jpg","jpeg","png","gif","webp","avif"].includes((name||"").split(".").pop().toLowerCase()); }
-
-var TOKEN = getTok();
-var searchIndex = []; // [{boxId, boxNote, files:[{name,caption,tags}]}]
-var boxes = [];
-
-function updateAuthUI() {
-  var authBar = document.getElementById("authBar");
-  var signOut = document.getElementById("signOutBtn");
-  var hint = document.getElementById("searchHint");
-  if (TOKEN) {
-    authBar.classList.add("hidden");
-    signOut.style.display = "";
-    hint.style.display = "none";
-  } else {
-    authBar.classList.remove("hidden");
-    signOut.style.display = "none";
-    hint.style.display = "";
-  }
+function updateAuthUI(){
+  var ab=document.getElementById("authBar");
+  var so=document.getElementById("signOutBtn");
+  if(TOKEN){ab.classList.add("hidden");so.style.display="";}
+  else{ab.classList.remove("hidden");so.style.display="none";}
 }
 
-document.getElementById("unlockBtn").addEventListener("click", async function() {
-  var tok = document.getElementById("passphraseInput").value.trim();
-  if (!tok) return;
-  var status = document.getElementById("authStatus");
-  status.textContent = "Checking…"; status.className = "auth-status";
-  try {
-    var res = await fetch(checkUrl(tok));
-    if (res.status === 200) {
-      TOKEN = tok; setTok(tok);
-      status.textContent = "✓ Authenticated"; status.className = "auth-status ok";
+document.getElementById("unlockBtn").addEventListener("click",async function(){
+  var tok=document.getElementById("passphraseInput").value.trim();if(!tok)return;
+  var msg=document.getElementById("authMsg");msg.textContent="Checking…";msg.className="auth-msg";
+  try{
+    var res=await fetch(checkUrl(tok));
+    if(res.status===200){
+      TOKEN=tok;setTok(tok);msg.textContent="✓ Authenticated";msg.className="auth-msg ok";
       updateAuthUI();
       await loadSearchIndex();
       setupCoverLazyLoader();
-    } else {
-      status.textContent = "Incorrect passphrase"; status.className = "auth-status err";
-    }
-  } catch(e) { status.textContent = "Error"; status.className = "auth-status err"; }
+      doSearch(); // re-run search with full index
+    }else{msg.textContent="Incorrect passphrase";msg.className="auth-msg err";}
+  }catch{msg.textContent="Error";msg.className="auth-msg err";}
 });
-document.getElementById("passphraseInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") document.getElementById("unlockBtn").click();
-});
-document.getElementById("signOutBtn").addEventListener("click", function() {
-  clearTok(); TOKEN = ""; searchIndex = []; updateAuthUI();
-  // Reload covers
-  document.querySelectorAll(".cover img").forEach(function(img) { img.remove(); });
-  document.querySelectorAll(".cover-placeholder").forEach(function(p) { p.style.display = ""; });
-  document.getElementById("searchHint").style.display = "";
+document.getElementById("passphraseInput").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("unlockBtn").click();});
+document.getElementById("signOutBtn").addEventListener("click",function(){
+  clearTok();TOKEN="";searchIndex=[];updateAuthUI();
+  document.querySelectorAll(".cover img").forEach(function(i){i.remove();});
+  document.querySelectorAll(".cover-placeholder").forEach(function(p){p.style.display="";});
+  doSearch();
 });
 
-// Load search index
-async function loadSearchIndex() {
-  if (!TOKEN) return;
-  try {
-    var res = await fetch(searchIndexUrl(TOKEN), { cache: "no-store" });
-    if (res.ok) { searchIndex = await res.json(); }
-    else { searchIndex = []; }
-  } catch { searchIndex = []; }
-  // Update card descriptions from index
-  searchIndex.forEach(function(entry) {
-    var card = document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
-    if (!card) return;
-    var desc = card.querySelector(".card-desc");
-    if (desc && entry.boxNote) desc.textContent = entry.boxNote;
+async function loadSearchIndex(){
+  if(!TOKEN)return;
+  try{var res=await fetch(searchIndexUrl(TOKEN),{cache:"no-store"});if(res.ok)searchIndex=await res.json();else searchIndex=[];}
+  catch{searchIndex=[];}
+  // Update card descriptions from index notes
+  searchIndex.forEach(function(entry){
+    var card=document.querySelector('a.card[data-boxid="'+entry.boxId+'"]');
+    if(!card)return;
+    var desc=card.querySelector(".card-desc");
+    if(desc&&entry.boxNote&&entry.boxNote.trim())desc.textContent=entry.boxNote.trim();
   });
 }
 
-// Cover lazy loader
-function setupCoverLazyLoader() {
-  if (!TOKEN) return;
-  var cards = [...document.querySelectorAll("a.card")];
-  var queue = []; var running = 0; var MAX = 4;
-  var pump = function() {
-    while (running < MAX && queue.length) {
-      var card = queue.shift(); running++;
-      loadCoverForCard(card).finally(function() { running--; pump(); });
-    }
-  };
-  var io = new IntersectionObserver(function(entries) {
-    entries.forEach(function(en) { if (en.isIntersecting) { io.unobserve(en.target); queue.push(en.target); } });
-    pump();
-  }, { rootMargin: "200px" });
-  cards.forEach(function(c) { io.observe(c); });
+function setupCoverLazyLoader(){
+  if(!TOKEN)return;
+  var cards=[...document.querySelectorAll("a.card")];
+  var queue=[],running=0,MAX=4;
+  var pump=function(){while(running<MAX&&queue.length){var c=queue.shift();running++;loadCover(c).finally(function(){running--;pump();});}};
+  var io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){io.unobserve(en.target);queue.push(en.target);}});pump();},{rootMargin:"200px"});
+  cards.forEach(function(c){io.observe(c);});
 }
 
-async function loadCoverForCard(card) {
-  var boxId = card.dataset.boxid;
-  var cover = card.querySelector(".cover");
-  if (!boxId || !cover || cover.dataset.loaded) return;
-  cover.dataset.loaded = "1";
-  try {
-    var res = await fetch(mediaListUrl(boxId, TOKEN), { cache: "no-store" });
-    if (!res.ok) return;
-    var arr = await res.json();
-    var first = (Array.isArray(arr) ? arr : []).map(function(x) { return x.name; }).find(isImage);
-    if (!first) return;
-    var img = new Image(); img.loading = "lazy";
-    img.src = mediaFileUrl(boxId, first, TOKEN); img.alt = "BOX-"+boxId;
-    var ph = cover.querySelector(".cover-placeholder");
-    img.onload = function() { if (ph) ph.style.display = "none"; cover.insertBefore(img, cover.querySelector(".cover-label")); };
-  } catch {}
+async function loadCover(card){
+  var boxId=card.dataset.boxid;var cover=card.querySelector(".cover");
+  if(!boxId||!cover||cover.dataset.loaded)return;cover.dataset.loaded="1";
+  try{
+    var res=await fetch(mediaListUrl(boxId,TOKEN),{cache:"no-store"});if(!res.ok)return;
+    var arr=await res.json();
+    var first=(Array.isArray(arr)?arr:[]).map(function(x){return x.name;}).find(isImg);
+    if(!first)return;
+    var img=new Image();img.loading="lazy";img.src=mediaFileUrl(boxId,first,TOKEN);img.alt="BOX-"+boxId;
+    var ph=cover.querySelector(".cover-placeholder");
+    img.onload=function(){if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
+  }catch{}
 }
 
-// Search
-var searchTerm = "";
-function doSearch() {
-  var term = normalize(searchTerm);
-  var sr = document.getElementById("searchResults");
-  var grid = document.getElementById("grid");
-  var counter = document.getElementById("counter");
+var searchTerm="";
+function doSearch(){
+  var term=norm(searchTerm);
+  var grid=document.getElementById("grid");
+  var counter=document.getElementById("counter");
+  var empty=document.getElementById("empty");
+  var fileResults=document.getElementById("fileResults");
+  var fileResultsList=document.getElementById("fileResultsList");
+  var searchMeta=document.getElementById("searchMeta");
 
-  if (!term) {
-    sr.classList.remove("visible"); sr.innerHTML = "";
-    document.querySelectorAll("a.card").forEach(function(c) { c.classList.remove("hidden"); });
-    counter.textContent = boxes.length + " boxes";
-    document.getElementById("empty").style.display = "none";
+  if(!term){
+    // Show all cards
+    document.querySelectorAll("a.card").forEach(function(c){c.classList.remove("hidden");});
+    counter.textContent=allBoxes.length+" boxes";
+    empty.style.display="none";
+    fileResults.classList.remove("visible");
+    fileResultsList.innerHTML="";
+    searchMeta.textContent=TOKEN?"Full search enabled":"Enter passphrase above to enable full search across all files";
     return;
   }
 
-  // If no token, just filter cards by box name/note/tags
-  if (!TOKEN || searchIndex.length === 0) {
-    var shown = 0;
-    document.querySelectorAll("a.card").forEach(function(card) {
-      var match = card.dataset.search.includes(term);
-      card.classList.toggle("hidden", !match);
-      if (match) shown++;
-    });
-    sr.classList.remove("visible"); sr.innerHTML = "";
-    counter.textContent = shown + " / " + boxes.length;
-    document.getElementById("empty").style.display = shown ? "none" : "block";
-    return;
-  }
+  // Always search boxes from boxes.json
+  var boxMatches=0;
+  document.querySelectorAll("a.card").forEach(function(card){
+    var match=card.dataset.search.includes(term);
+    card.classList.toggle("hidden",!match);
+    if(match)boxMatches++;
+  });
 
-  // Full search using index
-  sr.innerHTML = ""; var results = [];
-  searchIndex.forEach(function(entry) {
-    var boxLabel = "BOX-" + entry.boxId;
-    // Match box note
-    if (entry.boxNote && normalize(entry.boxNote).includes(term)) {
-      results.push({ boxId: entry.boxId, boxLabel: boxLabel, title: boxLabel + " — Notes", sub: "", match: entry.boxNote.slice(0,80), type: "note" });
-    }
-    // Match files
-    (entry.files || []).forEach(function(f) {
-      var nameMatch = normalize(f.name).includes(term);
-      var captionMatch = f.caption && normalize(f.caption).includes(term);
-      var tagMatch = (f.tags||[]).some(function(t) { return normalize(t).includes(term); });
-      if (nameMatch || captionMatch || tagMatch) {
-        var matchText = captionMatch ? f.caption : (tagMatch ? (f.tags||[]).join(", ") : "");
-        results.push({ boxId: entry.boxId, boxLabel: boxLabel, title: f.name, sub: boxLabel, match: matchText, type: "file" });
+  // Search file index if available
+  fileResultsList.innerHTML="";
+  var fileMatches=[];
+  if(TOKEN&&searchIndex.length>0){
+    searchIndex.forEach(function(entry){
+      // Search notes
+      if(entry.boxNote&&norm(entry.boxNote).includes(term)){
+        fileMatches.push({boxId:entry.boxId,name:"Notes · BOX-"+entry.boxId,caption:entry.boxNote.slice(0,80),type:"note"});
       }
+      // Search files
+      (entry.files||[]).forEach(function(f){
+        var nm=norm(f.name).includes(term);
+        var cp=f.caption&&norm(f.caption).includes(term);
+        var tg=(f.tags||[]).some(function(t){return norm(t).includes(term);});
+        if(nm||cp||tg){
+          fileMatches.push({boxId:entry.boxId,name:f.name,caption:cp?f.caption:((f.tags||[]).join(", ")),type:"file"});
+        }
+      });
     });
-  });
-
-  // Hide grid cards, show results
-  document.querySelectorAll("a.card").forEach(function(c) { c.classList.add("hidden"); });
-
-  if (results.length === 0) {
-    sr.classList.remove("visible");
-    document.getElementById("empty").style.display = "block";
-    counter.textContent = "0 results";
-    return;
   }
 
-  document.getElementById("empty").style.display = "none";
-  counter.textContent = results.length + " results";
-  sr.classList.add("visible");
+  if(fileMatches.length>0){
+    fileResults.classList.add("visible");
+    fileMatches.slice(0,20).forEach(function(r){
+      var a=document.createElement("a");a.className="result-item";a.href="box/?id="+r.boxId;
+      var icon=r.type==="note"?"📝":"📎";
+      a.innerHTML='<div class="result-icon">'+icon+'</div>'+
+        '<div class="result-main">'+
+          '<div class="result-name">'+escH(r.name)+'</div>'+
+          (r.caption?'<div class="result-caption">'+escH(r.caption.slice(0,80))+'</div>':'')+
+        '</div>'+
+        '<div class="result-box">BOX-'+r.boxId+'</div>';
+      fileResultsList.appendChild(a);
+    });
+  }else{
+    fileResults.classList.remove("visible");
+  }
 
-  results.forEach(function(r) {
-    var a = document.createElement("a");
-    a.className = "search-result-item";
-    a.href = "box/?id=" + r.boxId;
-    var icon = r.type === "note" ? "📝" : "📎";
-    a.innerHTML = '<div class="result-icon">'+icon+'</div>' +
-      '<div class="result-main">' +
-        '<div class="result-title">'+escHtml(r.title)+'</div>' +
-        (r.match ? '<div class="result-match">'+escHtml(r.match.slice(0,100))+'</div>' : '') +
-      '</div>' +
-      '<div class="result-box">'+r.boxLabel+'</div>';
-    sr.appendChild(a);
-  });
+  var total=boxMatches+fileMatches.length;
+  counter.textContent=boxMatches+" box"+(boxMatches===1?"":"es")+(fileMatches.length>0?", "+fileMatches.length+" file result"+(fileMatches.length===1?"":"s"):"");
+  searchMeta.textContent=TOKEN?"":"+sign in to search files & notes";
+  empty.style.display=(total===0)?"block":"none";
 }
 
-function escHtml(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+document.getElementById("q").addEventListener("input",function(){searchTerm=this.value;doSearch();});
 
-document.getElementById("q").addEventListener("input", function() {
-  searchTerm = this.value; doSearch();
-});
-
-// Boxes
-const coerceTags = tags => {
-  if (Array.isArray(tags)) return tags.map(t=>String(t).trim()).filter(Boolean);
-  if (typeof tags==="string") return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
-  return [];
+const coerceTags=tags=>{
+  if(Array.isArray(tags))return tags.map(t=>String(t).trim()).filter(Boolean);
+  if(typeof tags==="string")return tags.split(/[;,]/g).flatMap(p=>p.split(/\s+/g)).map(t=>t.trim()).filter(Boolean);
+  return[];
 };
 
-function filterByTag(tag) { document.getElementById("q").value=tag; searchTerm=tag; doSearch(); }
+function filterByTag(tag){document.getElementById("q").value=tag;searchTerm=tag;doSearch();}
 
-function makeCard(box) {
-  var a = document.createElement("a");
-  a.className = "card"; a.href = "box/?id="+box.id; a.dataset.boxid = box.id;
+function makeCard(box){
+  var a=document.createElement("a");a.className="card";a.href="box/?id="+box.id;a.dataset.boxid=box.id;
 
-  var cover = document.createElement("div"); cover.className = "cover";
-  var ph = document.createElement("div"); ph.className = "cover-placeholder"; ph.textContent = "📦";
-  var label = document.createElement("div"); label.className = "cover-label"; label.textContent = "BOX-"+box.id;
-  cover.appendChild(ph); cover.appendChild(label);
+  var cover=document.createElement("div");cover.className="cover";
+  var ph=document.createElement("div");ph.className="cover-placeholder";ph.textContent="📦";
+  var lbl=document.createElement("div");lbl.className="cover-label";lbl.textContent="BOX-"+box.id;
+  cover.appendChild(ph);cover.appendChild(lbl);
 
-  var body = document.createElement("div"); body.className = "card-body";
-  var title = document.createElement("div"); title.className = "card-title"; title.textContent = "BOX-"+box.id;
-  var desc = document.createElement("div"); desc.className = "card-desc"; desc.textContent = box.note || "No description";
-  body.appendChild(title); body.appendChild(desc);
+  var body=document.createElement("div");body.className="card-body";
+  var title=document.createElement("div");title.className="card-title";title.textContent="BOX-"+box.id;
+  var desc=document.createElement("div");desc.className="card-desc";desc.textContent=box.note||"No description";
+  body.appendChild(title);body.appendChild(desc);
 
-  if (box.tags.length) {
-    var tagsWrap = document.createElement("div"); tagsWrap.className = "card-tags";
-    box.tags.forEach(function(tag) {
-      var s = document.createElement("span"); s.className = "tag"; s.textContent = tag;
-      s.addEventListener("click", function(e) { e.preventDefault(); e.stopPropagation(); filterByTag(tag); });
-      tagsWrap.appendChild(s);
+  if(box.tags.length){
+    var tw=document.createElement("div");tw.className="card-tags";
+    box.tags.forEach(function(tag){
+      var s=document.createElement("span");s.className="tag";s.textContent=tag;
+      s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});
+      tw.appendChild(s);
     });
-    body.appendChild(tagsWrap);
+    body.appendChild(tw);
   }
 
-  a.appendChild(cover); a.appendChild(body);
-  a.dataset.search = ["box-"+box.id, box.id, box.key||"", box.note||"", box.tags.join(" ")].join(" ").toLowerCase();
+  a.appendChild(cover);a.appendChild(body);
+  a.dataset.search=["box-"+box.id,box.id,box.key||"",box.note||"",box.tags.join(" ")].join(" ").toLowerCase();
   return a;
 }
 
-function render(list) {
-  var grid = document.getElementById("grid"); grid.innerHTML = "";
-  list.forEach(function(b) { grid.appendChild(makeCard(b)); });
-  document.getElementById("counter").textContent = list.length + " boxes";
+function render(list){
+  var grid=document.getElementById("grid");grid.innerHTML="";
+  list.forEach(function(b){grid.appendChild(makeCard(b));});
+  document.getElementById("counter").textContent=list.length+" boxes";
 }
 
-async function loadBoxes() {
-  var res = await fetch("boxes.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("boxes.json not found");
-  var data = await res.json();
-  var list = Array.isArray(data.boxes) ? data.boxes : [];
-  return list.map(function(r) {
-    return { id: pad2(parseInt(r.id,10)), key:(r.key||"").trim(), note:(r.note||""), tags:coerceTags(r.tags) };
-  }).sort(function(a,b) { return parseInt(a.id,10)-parseInt(b.id,10); });
+async function loadBoxes(){
+  var res=await fetch("boxes.json",{cache:"no-store"});
+  if(!res.ok)throw new Error("boxes.json not found");
+  var data=await res.json();
+  var list=Array.isArray(data.boxes)?data.boxes:[];
+  return list.map(function(r){return{id:pad2(parseInt(r.id,10)),key:(r.key||"").trim(),note:(r.note||""),tags:coerceTags(r.tags)};})
+    .sort(function(a,b){return parseInt(a.id,10)-parseInt(b.id,10);});
 }
 
-(async function() {
-  try {
-    boxes = await loadBoxes();
-    render(boxes);
-    updateAuthUI();
-    if (TOKEN) {
-      await loadSearchIndex();
-      setupCoverLazyLoader();
-    }
-  } catch(e) {
-    console.error(e);
-    var fb = []; for (var i=1;i<=50;i++) fb.push({id:pad2(i),key:"",note:"",tags:[]});
-    boxes = fb; render(fb); updateAuthUI();
+(async function(){
+  try{
+    allBoxes=await loadBoxes();render(allBoxes);updateAuthUI();
+    if(TOKEN){await loadSearchIndex();setupCoverLazyLoader();}
+    doSearch();
+  }catch(e){
+    console.error(e);var fb=[];for(var i=1;i<=50;i++)fb.push({id:pad2(i),key:"",note:"",tags:[]});
+    allBoxes=fb;render(fb);updateAuthUI();
   }
 })();
 </script>
