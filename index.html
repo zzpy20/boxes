@@ -373,15 +373,16 @@ async function loadCover(card){
   var boxId=card.dataset.boxid;var cover=card.querySelector(".cover");
   if(!boxId||!cover||cover.dataset.loaded)return;
   cover.dataset.loaded="1";
-  // Always check search index first for coverFile
-  var entry=searchIndex.find(function(e){return e.boxId===boxId;});
-  var coverFile=entry&&entry.coverFile;
   var ph=cover.querySelector(".cover-placeholder");
   function showImg(url){
-    var img=new Image();img.loading="lazy";img.src=url;img.alt="BOX-"+boxId;
+    var img=new Image();img.src=url;img.alt="BOX-"+boxId;
     img.onload=function(){if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
   }
-  if(coverFile){showImg(mediaFileUrl(boxId,coverFile,TOKEN));return;}
+  // Load cover from dedicated _cover file in R2
+  try{
+    var cr=await fetch(mediaFileUrl(boxId,"_cover",TOKEN),{cache:"no-store"});
+    if(cr.ok){var cf=(await cr.text()).trim();if(cf){showImg(mediaFileUrl(boxId,cf,TOKEN));return;}}
+  }catch{}
   // Auto-detect: use first image from list
   try{
     var res=await fetch(mediaListUrl(boxId,TOKEN),{cache:"no-store"});if(!res.ok)return;
@@ -403,14 +404,22 @@ async function openEditBoxModal(boxId){
   document.getElementById("editBoxTags").value=(box.tags||[]).join(", ");
   // Load cover picker
   var picker=document.getElementById("coverPicker");
-  picker.innerHTML='<div class="cover-pick-item none-item'+((!entry||!entry.coverFile)?" selected":"")+ '" data-cover="">📦 No cover</div>';
+  picker.innerHTML='<div class="cover-pick-item none-item" data-cover="">📦 No cover</div>';
   var currentCover=(entry&&entry.coverFile)||"";
+  // Prefer reading from R2 _cover file (source of truth after save)
+  try{
+    var cr2=new URL(WORKER_BASE+"media/box-"+boxId+"/_cover");cr2.searchParams.set("t",TOKEN);
+    var crr=await fetch(cr2.toString(),{cache:"no-store"});
+    if(crr.ok){var cf2=(await crr.text()).trim();currentCover=cf2;}
+  }catch{}
   // Load images for this box
   try{
     var res=await fetch(mediaListUrl(boxId,TOKEN),{cache:"no-store"});
     if(res.ok){
       var arr=await res.json();
       var imgs=(Array.isArray(arr)?arr:[]).filter(function(f){return isImg(f.name);});
+      // Mark none-item selected if no cover
+      if(!currentCover)picker.querySelector(".none-item").classList.add("selected");
       imgs.forEach(function(f){
         var item=document.createElement("div");item.className="cover-pick-item"+(f.name===currentCover?" selected":"");item.dataset.cover=f.name;
         var img=document.createElement("img");img.src=mediaFileUrl(boxId,f.name,TOKEN);img.alt=f.name;img.loading="lazy";
@@ -445,6 +454,9 @@ document.getElementById("editBoxSave").addEventListener("click",async function()
   else{searchIndex.push({boxId:editingBoxId,boxNote:desc,files:[],coverFile:coverFile});}
   // Save search index
   await fetch(searchIndexUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(searchIndex)});
+  // Persist cover to dedicated R2 file so loadCover can find it on reload
+  var coverUrl=new URL(WORKER_BASE+"media/box-"+editingBoxId+"/_cover");coverUrl.searchParams.set("t",TOKEN);
+  await fetch(coverUrl.toString(),{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:coverFile});
   // Update card
   var card=document.querySelector('a.card[data-boxid="'+editingBoxId+'"]');
   if(card){
