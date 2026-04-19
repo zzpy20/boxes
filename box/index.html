@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="robots" content="noindex" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Box</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -326,6 +327,6 @@
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=5"></script>
+<script src="../box.js?v=6"></script>
 </body>
 </html>

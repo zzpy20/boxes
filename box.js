@@ -120,9 +120,10 @@ function updateSearchIndex(){
     if(!Array.isArray(idx))idx=[];
     if(!Array.isArray(fileList))fileList=[];
     var files=fileList.map(function(f){var m=META[f.name]||{};return{name:f.name,caption:m.caption||"",tags:m.tags||[]};});
-    var entry={boxId:BOX_ID,boxNote:noteText,files:files};
     var existing=idx.find(function(e){return e.boxId===BOX_ID;});
-    if(existing){entry.coverFile=existing.coverFile||"";entry.boxDesc=existing.boxDesc||"";entry.boxTags=existing.boxTags||[];}
+    // Merge: start from existing entry so ALL fields set by other parts of the app are preserved,
+    // then only override the fields this page owns (boxNote, files).
+    var entry=Object.assign({},existing||{},{boxId:BOX_ID,boxNote:noteText,files:files});
     var found=false;
     for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
     if(!found)idx.push(entry);
