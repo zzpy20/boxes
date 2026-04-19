@@ -1,7 +1,7 @@
 // box.js v13 - bigger checkbox, multiline caption, search index
-const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
-const TOKEN_STORAGE_KEY = "boxes_auth_token";
-const TOKEN_PARAM = "t";
+const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
+const TOKEN_STORAGE_KEY="boxes_auth_token";
+const TOKEN_PARAM="t";
 
 function getBoxIdFromUrl(){var p=new URLSearchParams(window.location.search);var id=(p.get("id")||"").trim();if(/^\d{1,2}$/.test(id))return id.padStart(2,"0");return null;}
 async function loadBoxesJson(){var r=await fetch("../boxes.json",{cache:"no-store"});if(!r.ok)throw new Error("not found");return await r.json();}
@@ -94,8 +94,12 @@ function loadNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();var st=$("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.text():"";})
-    .then(function(html){el.innerHTML=html||"";noteText=(el.innerText||el.textContent||"").trim();if(st)st.textContent=html?"Note loaded":"No note yet";if(typeof updateNotesPreview==="function")updateNotesPreview();})
-    .catch(function(){if($("notesStatus"))$("notesStatus").textContent="Could not load note";});
+    .then(function(html){
+      el.innerHTML=html||"";
+      noteText=(el.innerText||el.textContent||"").trim();
+      if(st)st.textContent=html?"Note loaded":"No note yet";
+      if(typeof updateNotesPreview==="function")updateNotesPreview();
+    }).catch(function(){if(st)st.textContent="Could not load note";});
 }
 function saveNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
@@ -116,9 +120,13 @@ function updateSearchIndex(){
     .then(function(r){return r.ok?r.json():[];})
     .then(function(idx){
       if(!Array.isArray(idx))idx=[];
+      // Preserve coverFile from existing entry
+      var existing=idx.find(function(e){return e.boxId===BOX_ID;});
+      var entry=buildIndexEntry();
+      if(existing)entry.coverFile=existing.coverFile||"";
       var found=false;
-      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=buildIndexEntry();found=true;break;}}
-      if(!found)idx.push(buildIndexEntry());
+      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
+      if(!found)idx.push(entry);
       return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
     }).catch(function(e){console.warn("Search index update failed:",e);});
 }
@@ -145,7 +153,9 @@ function showCtxMenu(e,items){
 var editingFile=null;
 function openEditModal(name){
   editingFile=name;var m=META[name]||{caption:"",tags:[]};
-  $("editFilename").textContent=name;$("editCaption").value=m.caption||"";$("editTags").value=(m.tags||[]).join(", ");
+  $("editFilename").textContent=name;
+  $("editCaption").value=m.caption||"";
+  $("editTags").value=(m.tags||[]).join(", ");
   $("editModal").classList.remove("hidden");$("editCaption").focus();
 }
 function closeEditModal(){$("editModal").classList.add("hidden");editingFile=null;}
@@ -253,8 +263,9 @@ function refreshList(){
         var m=META[name]||{caption:"",tags:[]};
         var row=document.createElement("div");row.className="fileRow";row.dataset.name=name;
 
-        // Bigger checkbox wrapper for easier tapping
-        var cbWrap=document.createElement("label");cbWrap.className="fileCheckWrap";cbWrap.onclick=function(e){e.stopPropagation();};
+        // Bigger checkbox wrapper
+        var cbWrap=document.createElement("label");cbWrap.className="fileCheckWrap";cbWrap.title="Select";
+        cbWrap.addEventListener("click",function(e){e.stopPropagation();});
         var cb=document.createElement("input");cb.type="checkbox";cb.className="fileCheck";
         cb.addEventListener("change",function(){
           if(cb.checked){selectedFiles[name]=true;row.classList.add("selected");}
@@ -265,7 +276,7 @@ function refreshList(){
 
         var thumb=makeThumb(name,ext,fileUrl);
 
-        // Main area - click to open
+        // Main - click to open
         var mainDiv=document.createElement("div");mainDiv.className="fileMain";mainDiv.style.cursor="pointer";
         mainDiv.onclick=function(e){if(e.target.closest(".fileCheckWrap"))return;window.open(fileUrl,"_blank");};
         var nameDiv=document.createElement("div");nameDiv.className="fileName";nameDiv.textContent=name;
@@ -381,6 +392,7 @@ function main(){
   $("boxTitle").textContent="BOX-"+BOX_ID;
   var bc=$("breadcrumbCurrent");if(bc)bc.textContent="BOX-"+BOX_ID;
   document.title="BOX-"+BOX_ID;
+
   loadBoxesJson().then(function(data){
     var boxes=Array.isArray(data.boxes)?data.boxes:[];
     var row=null;boxes.forEach(function(b){if(String(b.id||"").padStart(2,"0")===BOX_ID)row=b;});
@@ -409,4 +421,5 @@ function main(){
     });
   }).catch(function(e){setStatus("Error: "+(e&&e.message?e.message:String(e)));console.error(e);});
 }
+
 main();
