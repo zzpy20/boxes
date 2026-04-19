@@ -112,7 +112,11 @@ function saveNote(){
 }
 
 function buildIndexEntry(){
-  var files=[];Object.keys(META).forEach(function(name){var m=META[name]||{};files.push({name:name,caption:m.caption||"",tags:m.tags||[]});});
+  var files=[];
+  document.querySelectorAll(".fileRow").forEach(function(row){
+    var name=row.dataset.name;if(!name)return;
+    var m=META[name]||{};files.push({name:name,caption:m.caption||"",tags:m.tags||[]});
+  });
   return{boxId:BOX_ID,boxNote:noteText,files:files};
 }
 function updateSearchIndex(){
@@ -341,7 +345,7 @@ function uploadFiles(files){
     xhr.onerror=function(){alert("Network error: "+it.f.name);resolve();};xhr.send(fd);
   });});});
   return chain.then(function(){$("uploadBtn").disabled=false;$("fileIn").disabled=false;$("fileIn").value="";return refreshList();})
-    .then(function(){setTimeout(function(){progHost.style.display="none";},800);});
+    .then(function(){setTimeout(function(){progHost.style.display="none";},800);return updateSearchIndex();});
 }
 
 function wireDropzone(){
