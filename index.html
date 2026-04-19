@@ -162,6 +162,7 @@
     <span class="admin-label">Admin:</span>
     <button class="btn sm primary" id="addBoxBtn">+ Add box</button>
     <button class="btn sm" id="rebuildIndexBtn">↺ Rebuild search index</button>
+    <button class="btn sm danger" id="trashBtn" style="display:none">🗑 Trash</button>
     <div class="progress-bar-wrap" id="rebuildProgress"><div class="progress-bar-fill" id="rebuildFill"></div></div>
     <span class="progress-label" id="rebuildLabel"></span>
   </div>
@@ -226,6 +227,15 @@
         <button class="btn primary" id="addBoxSave">Add box</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Trash modal -->
+<div class="modal hidden" id="trashModal">
+  <div class="modal-card">
+    <div class="modal-head"><div class="modal-title">🗑 Recycle Bin</div></div>
+    <div class="modal-body" id="trashList"></div>
+    <div class="modal-foot"><div></div><button class="btn" id="trashClose">Close</button></div>
   </div>
 </div>
 
@@ -498,16 +508,74 @@ document.getElementById("editBoxSave").addEventListener("click",async function()
 });
 
 document.getElementById("deleteBoxBtn").addEventListener("click",async function(){
-  if(!confirm("Remove BOX-"+editingBoxId+" from the list? (Files in R2 are not deleted)"))return;
-  allBoxes=allBoxes.filter(function(b){return b.id!==editingBoxId;});
+  if(!confirm("Move BOX-"+editingBoxId+" to recycle bin?\nFiles are kept until you permanently delete it."))return;
+  var entry=searchIndex.find(function(e){return e.boxId===editingBoxId;});
   var cfg=getBoxConfig();
+  cfg.trash=(cfg.trash||[]).filter(function(t){return t.id!==editingBoxId;});
+  cfg.trash.push({id:editingBoxId,boxDesc:(entry&&entry.boxDesc)||"",boxTags:(entry&&entry.boxTags)||[],deletedAt:new Date().toISOString()});
   cfg.deletedIds=(cfg.deletedIds||[]).filter(function(id){return id!==editingBoxId;});
   cfg.deletedIds.push(editingBoxId);
   cfg.customBoxes=(cfg.customBoxes||[]).filter(function(b){return b.id!==editingBoxId;});
   saveBoxConfig(cfg);
+  allBoxes=allBoxes.filter(function(b){return b.id!==editingBoxId;});
   render(allBoxes);
   document.getElementById("editBoxModal").classList.add("hidden");
+  updateTrashBtn();
 });
+
+function updateTrashBtn(){
+  var cfg=getBoxConfig();var n=(cfg.trash||[]).length;
+  var btn=document.getElementById("trashBtn");
+  if(btn){btn.textContent="🗑 Trash"+(n?" ("+n+")":"");btn.style.display=n?"":"none";}
+}
+
+function openTrash(){
+  var cfg=getBoxConfig();var trash=cfg.trash||[];
+  var list=document.getElementById("trashList");list.innerHTML="";
+  if(!trash.length){list.innerHTML='<p style="color:var(--muted);font-size:14px;padding:8px 0">Recycle bin is empty.</p>';document.getElementById("trashModal").classList.remove("hidden");return;}
+  trash.slice().reverse().forEach(function(t){
+    var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;";
+    var info=document.createElement("div");
+    var title=document.createElement("div");title.style.fontWeight="600";title.textContent="BOX-"+t.id;
+    var sub=document.createElement("div");sub.style.cssText="font-size:12px;color:var(--muted);margin-top:2px;";
+    sub.textContent=(t.boxDesc||"No description")+" · "+new Date(t.deletedAt).toLocaleDateString();
+    info.appendChild(title);info.appendChild(sub);
+    var btns=document.createElement("div");btns.style.cssText="display:flex;gap:6px;flex-shrink:0;";
+    var rb=document.createElement("button");rb.className="btn sm";rb.textContent="Restore";rb.onclick=function(){restoreBox(t.id);};
+    var db=document.createElement("button");db.className="btn sm danger";db.textContent="Delete permanently";db.onclick=function(){permanentlyDeleteBox(t.id);};
+    btns.appendChild(rb);btns.appendChild(db);row.appendChild(info);row.appendChild(btns);list.appendChild(row);
+  });
+  document.getElementById("trashModal").classList.remove("hidden");
+}
+
+function restoreBox(id){
+  var cfg=getBoxConfig();
+  cfg.trash=(cfg.trash||[]).filter(function(t){return t.id!==id;});
+  cfg.deletedIds=(cfg.deletedIds||[]).filter(function(d){return d!==id;});
+  saveBoxConfig(cfg);
+  if(!allBoxes.find(function(b){return b.id===id;})){
+    allBoxes.push({id:id,key:"",note:"",tags:[]});
+    allBoxes.sort(function(a,b){return parseInt(a.id,10)-parseInt(b.id,10);});
+    render(allBoxes);applySearchIndexToCards();
+  }
+  updateTrashBtn();openTrash();
+}
+
+async function permanentlyDeleteBox(id){
+  if(!confirm("Permanently delete BOX-"+id+" and ALL its files? This cannot be undone."))return;
+  var delUrl=new URL(WORKER_BASE+"media/box-"+id);delUrl.searchParams.set("all","1");delUrl.searchParams.set("t",TOKEN);
+  await fetch(delUrl.toString(),{method:"DELETE"}).catch(function(){});
+  searchIndex=searchIndex.filter(function(e){return e.boxId!==id;});
+  var cfg=getBoxConfig();
+  cfg.trash=(cfg.trash||[]).filter(function(t){return t.id!==id;});
+  cfg.deletedIds=(cfg.deletedIds||[]).filter(function(d){return d!==id;});
+  saveBoxConfig(cfg);
+  updateTrashBtn();openTrash();
+}
+
+document.getElementById("trashBtn").addEventListener("click",openTrash);
+document.getElementById("trashClose").addEventListener("click",function(){document.getElementById("trashModal").classList.add("hidden");});
+document.getElementById("trashModal").addEventListener("click",function(e){if(e.target===this)this.classList.add("hidden");});
 
 // Add box
 document.getElementById("addBoxBtn").addEventListener("click",function(){
@@ -662,6 +730,7 @@ async function loadBoxes(){
     allBoxes=await loadBoxes();render(allBoxes);updateAuthUI();
     if(TOKEN){
       await loadSearchIndex();
+      updateTrashBtn();
       // Apply persistent box additions/deletions stored in _config
       var cfg=getBoxConfig();
       var deletedSet=new Set(cfg.deletedIds||[]);
