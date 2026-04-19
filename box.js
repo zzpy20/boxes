@@ -197,7 +197,7 @@ function addLinkRow(label,url){
   var labelIn=document.createElement("input");labelIn.type="text";labelIn.className="editInput link-label";labelIn.placeholder="Label";labelIn.value=label||"";
   var urlIn=document.createElement("input");urlIn.type="url";urlIn.className="editInput link-url";urlIn.placeholder="https://…";urlIn.value=url||"";
   var openBtn=document.createElement("button");openBtn.className="link-icon-btn";openBtn.type="button";openBtn.title="Open link";openBtn.textContent="↗";
-  openBtn.onclick=function(){var v=(urlIn.value||"").trim();if(v)window.open(v,"_blank");};
+  openBtn.onclick=function(){var v=(urlIn.value||"").trim();if(v){if(!/^https?:\/\//i.test(v))v="https://"+v;window.open(v,"_blank");};};
   var removeBtn=document.createElement("button");removeBtn.className="link-icon-btn danger";removeBtn.type="button";removeBtn.title="Remove";removeBtn.textContent="✕";
   removeBtn.onclick=function(){row.remove();};
   row.appendChild(labelIn);row.appendChild(urlIn);row.appendChild(openBtn);row.appendChild(removeBtn);
