@@ -1,4 +1,4 @@
-// box.js v12 - no hover popup, click filename to open, search index
+// box.js v13 - bigger checkbox, multiline caption, search index
 const WORKER_BASE = "https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY = "boxes_auth_token";
 const TOKEN_PARAM = "t";
@@ -91,12 +91,11 @@ function saveMeta(){
     .then(function(){return updateSearchIndex();});
 }
 function loadNote(){
-  var el=$("notesEditor");if(!el)return Promise.resolve();
-  var st=$("notesStatus");
+  var el=$("notesEditor");if(!el)return Promise.resolve();var st=$("notesStatus");
   return fetch(mediaNoteGetUrl(BOX_ID,TOKEN),{cache:"no-store"})
     .then(function(r){return r.ok?r.text():"";})
     .then(function(html){el.innerHTML=html||"";noteText=(el.innerText||el.textContent||"").trim();if(st)st.textContent=html?"Note loaded":"No note yet";if(typeof updateNotesPreview==="function")updateNotesPreview();})
-    .catch(function(){if(st)st.textContent="Could not load note";});
+    .catch(function(){if($("notesStatus"))$("notesStatus").textContent="Could not load note";});
 }
 function saveNote(){
   var el=$("notesEditor");if(!el)return Promise.resolve();
@@ -201,7 +200,6 @@ function applySearch(){
   });
 }
 
-// Thumb - no hover popup (use fixed popup only on desktop, no popup in grid)
 function makeThumb(name,ext,fileUrl){
   var wrap=document.createElement("div");wrap.className="fileThumb";
   if(isImageExt(ext)){
@@ -211,17 +209,12 @@ function makeThumb(name,ext,fileUrl){
       loadHeicUrl(fileUrl).then(function(url){
         wrap.innerHTML="";
         var img=document.createElement("img");img.src=url;img.alt=name;img.className="thumb-img";wrap.appendChild(img);
-        // Desktop only: hover popup
-        if(window.matchMedia("(hover:hover)").matches){
-          var popup=makePopup(url);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
-        }
+        if(window.matchMedia("(hover:hover)").matches){var popup=makePopup(url);wrap.appendChild(popup);attachPopupFollow(wrap,popup);}
         wrap.onclick=function(e){e.stopPropagation();window.open(url,"_blank");};
       }).catch(function(){wrap.innerHTML="🖼";});
     }else{
       var img=document.createElement("img");img.src=fileUrl;img.alt=name;img.className="thumb-img";img.loading="lazy";wrap.appendChild(img);
-      if(window.matchMedia("(hover:hover)").matches){
-        var popup=makePopup(fileUrl);wrap.appendChild(popup);attachPopupFollow(wrap,popup);
-      }
+      if(window.matchMedia("(hover:hover)").matches){var popup=makePopup(fileUrl);wrap.appendChild(popup);attachPopupFollow(wrap,popup);}
       wrap.onclick=function(e){e.stopPropagation();window.open(fileUrl,"_blank");};
     }
   }else{wrap.textContent=fileIcon(name);}
@@ -260,23 +253,21 @@ function refreshList(){
         var m=META[name]||{caption:"",tags:[]};
         var row=document.createElement("div");row.className="fileRow";row.dataset.name=name;
 
-        // Checkbox
+        // Bigger checkbox wrapper for easier tapping
+        var cbWrap=document.createElement("label");cbWrap.className="fileCheckWrap";cbWrap.onclick=function(e){e.stopPropagation();};
         var cb=document.createElement("input");cb.type="checkbox";cb.className="fileCheck";
         cb.addEventListener("change",function(){
           if(cb.checked){selectedFiles[name]=true;row.classList.add("selected");}
           else{delete selectedFiles[name];row.classList.remove("selected");}
           updateActionBar();
         });
+        cbWrap.appendChild(cb);
 
         var thumb=makeThumb(name,ext,fileUrl);
 
-        // Main - clicking filename opens file
-        var mainDiv=document.createElement("div");mainDiv.className="fileMain";
-        mainDiv.style.cursor="pointer";
-        mainDiv.onclick=function(e){
-          if(e.target.closest(".fileCheck"))return;
-          window.open(fileUrl,"_blank");
-        };
+        // Main area - click to open
+        var mainDiv=document.createElement("div");mainDiv.className="fileMain";mainDiv.style.cursor="pointer";
+        mainDiv.onclick=function(e){if(e.target.closest(".fileCheckWrap"))return;window.open(fileUrl,"_blank");};
         var nameDiv=document.createElement("div");nameDiv.className="fileName";nameDiv.textContent=name;
         var metaDiv=document.createElement("div");metaDiv.className="fileMeta";
         metaDiv.textContent=fmtBytes(it.size)+(it.lastModified?" · "+fmtDate(it.lastModified):"");
@@ -285,7 +276,6 @@ function refreshList(){
         (m.tags||[]).forEach(function(tag){var s=document.createElement("span");s.className="fileTag";s.textContent=tag;tagsDiv.appendChild(s);});
         mainDiv.appendChild(nameDiv);mainDiv.appendChild(metaDiv);mainDiv.appendChild(captionDiv);mainDiv.appendChild(tagsDiv);
 
-        // Three-dot menu only (no hover action bar)
         var menuBtn=document.createElement("button");menuBtn.className="menuBtn";menuBtn.textContent="⋯";menuBtn.title="More";
         menuBtn.onclick=function(e){
           showCtxMenu(e,[
@@ -296,7 +286,7 @@ function refreshList(){
           ]);
         };
 
-        row.appendChild(cb);row.appendChild(thumb);row.appendChild(mainDiv);row.appendChild(menuBtn);
+        row.appendChild(cbWrap);row.appendChild(thumb);row.appendChild(mainDiv);row.appendChild(menuBtn);
         $("files").appendChild(row);
       });
       applySearch();
@@ -391,7 +381,6 @@ function main(){
   $("boxTitle").textContent="BOX-"+BOX_ID;
   var bc=$("breadcrumbCurrent");if(bc)bc.textContent="BOX-"+BOX_ID;
   document.title="BOX-"+BOX_ID;
-
   loadBoxesJson().then(function(data){
     var boxes=Array.isArray(data.boxes)?data.boxes:[];
     var row=null;boxes.forEach(function(b){if(String(b.id||"").padStart(2,"0")===BOX_ID)row=b;});
@@ -420,5 +409,4 @@ function main(){
     });
   }).catch(function(e){setStatus("Error: "+(e&&e.message?e.message:String(e)));console.error(e);});
 }
-
 main();
