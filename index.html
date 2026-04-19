@@ -321,7 +321,8 @@ function applySearchIndexToCards(){
     var tags=entry.boxTags||[];
     var tw=card.querySelector(".card-tags");
     if(tw){tw.innerHTML="";tags.forEach(function(tag){var s=document.createElement("span");s.className="tag";s.textContent=tag;s.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();filterByTag(tag);});tw.appendChild(s);});}
-    card.dataset.search=["box-"+entry.boxId,entry.boxId,displayText,tags.join(" ")].join(" ").toLowerCase();
+    var linkText=(entry.boxLinks||[]).map(function(l){return(l.label||"")+" "+(l.url||"");}).join(" ");
+    card.dataset.search=["box-"+entry.boxId,entry.boxId,displayText,tags.join(" "),entry.boxUid||"",linkText].join(" ").toLowerCase();
   });
 }
 
