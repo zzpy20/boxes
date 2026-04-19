@@ -139,8 +139,10 @@ async function handleMedia(request, env, origin, tokenOk) {
     for (let i = 0; i < 20; i++) {
       const res = await env.BOX_R2.list({ prefix, cursor, limit: 1000 });
       for (const obj of res.objects) {
+        const name = obj.key.slice(prefix.length);
+        if (name === "_meta" || name === "note") continue;
         out.push({
-          name: obj.key.slice(prefix.length),
+          name,
           size: obj.size,
           etag: obj.etag,
           lastModified: obj.uploaded ? obj.uploaded.toISOString() : null,
@@ -316,13 +318,13 @@ export default {
     if (path === "/search-index") {
       if (!tokenOk) return json({ ok: false, error: "unauthorized" }, 401, corsHeaders(origin));
       if (request.method === "GET") {
-        const obj = await env.BOX_R2.get("_search-index.json");
-        if (!obj) return json([], 200, corsHeaders(origin));
-        return new Response(obj.body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(origin) } });
+        const val = await env.BOX_KV.get("sys:search-index");
+        if (!val) return json([], 200, corsHeaders(origin));
+        return new Response(val, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(origin) } });
       }
       if (request.method === "POST") {
         const body = await request.text();
-        await env.BOX_R2.put("_search-index.json", body, { httpMetadata: { contentType: "application/json; charset=utf-8" } });
+        await env.BOX_KV.put("sys:search-index", body);
         return json({ ok: true }, 200, corsHeaders(origin));
       }
       return json({ ok: false, error: "method_not_allowed" }, 405, corsHeaders(origin));
