@@ -207,6 +207,17 @@ async function handleMedia(request, env, origin, tokenOk) {
     return json({ ok: true }, 200, corsHeaders(origin));
   }
 
+  // SAVE FILE (note, _meta, or any raw file path)
+  if (request.method === "POST" && parts.length >= 3 && parts[2] !== "upload") {
+    const rawFilename = parts.slice(2).map(safeDecodePathPart).join("/");
+    const clean = sanitizeFilename(rawFilename);
+    if (!clean) return json({ ok: false, error: "missing_filename" }, 400, corsHeaders(origin));
+    const key = prefix + clean;
+    const ct = request.headers.get("Content-Type") || "application/octet-stream";
+    await env.BOX_R2.put(key, request.body, { httpMetadata: { contentType: ct } });
+    return json({ ok: true }, 200, corsHeaders(origin));
+  }
+
   // GET FILE
   if (request.method === "GET" && parts.length >= 3) {
     const rawFilename = parts.slice(2).map(safeDecodePathPart).join("/");
@@ -219,11 +230,11 @@ async function handleMedia(request, env, origin, tokenOk) {
 
     // Backwards-compatible lookup for older sanitized keys / special spaces / exact raw key
     const rawKey = prefix + raw;
-    const rawSpaceKey = prefix + raw.replace(/[\\u00A0\\u202F\\u2007]/g, " ");
-    const rawUnderscoreKey = prefix + raw.replace(/[\\u00A0\\u202F\\u2007]/g, "_");
+    const rawSpaceKey = prefix + raw.replace(/[\u00A0\u202F\u2007]/g, " ");
+    const rawUnderscoreKey = prefix + raw.replace(/[\u00A0\u202F\u2007]/g, "_");
     const alt1 = prefix + legacySanitize(raw);
     const alt2 = prefix + legacySanitize(clean);
-    const alt3 = prefix + clean.replace(/[\\u00A0\\u202F\\u2007]/g, "_");
+    const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
 
     const candidates = Array.from(new Set([rawKey, rawSpaceKey, rawUnderscoreKey, key, alt1, alt2, alt3]));
 
@@ -299,6 +310,22 @@ export default {
       const tenBucket = Math.floor(Date.now() / 600000);
       const unauth = await bumpCounter(cache, `unauth:${ip}:${tenBucket}`, 650);
       if (unauth > MAX_UNAUTH_PER_10MIN) return json({ ok: false, error: "too_many_unauthorized" }, 429, corsHeaders(origin));
+    }
+
+    // Search index
+    if (path === "/search-index") {
+      if (!tokenOk) return json({ ok: false, error: "unauthorized" }, 401, corsHeaders(origin));
+      if (request.method === "GET") {
+        const obj = await env.BOX_R2.get("_search-index.json");
+        if (!obj) return json([], 200, corsHeaders(origin));
+        return new Response(obj.body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(origin) } });
+      }
+      if (request.method === "POST") {
+        const body = await request.text();
+        await env.BOX_R2.put("_search-index.json", body, { httpMetadata: { contentType: "application/json; charset=utf-8" } });
+        return json({ ok: true }, 200, corsHeaders(origin));
+      }
+      return json({ ok: false, error: "method_not_allowed" }, 405, corsHeaders(origin));
     }
 
     // Media
