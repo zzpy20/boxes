@@ -378,11 +378,9 @@ async function loadCover(card){
     var img=new Image();img.src=url;img.alt="BOX-"+boxId;
     img.onload=function(){if(ph)ph.style.display="none";cover.insertBefore(img,cover.querySelector(".cover-label"));};
   }
-  // Load cover from dedicated _cover file in R2
-  try{
-    var cr=await fetch(mediaFileUrl(boxId,"_cover",TOKEN),{cache:"no-store"});
-    if(cr.ok){var cf=(await cr.text()).trim();if(cf){showImg(mediaFileUrl(boxId,cf,TOKEN));return;}}
-  }catch{}
+  // Use search index (already in memory, no extra request)
+  var entry=searchIndex.find(function(e){return e.boxId===boxId;});
+  if(entry&&entry.coverFile){showImg(mediaFileUrl(boxId,entry.coverFile,TOKEN));return;}
   // Auto-detect: use first image from list
   try{
     var res=await fetch(mediaListUrl(boxId,TOKEN),{cache:"no-store"});if(!res.ok)return;
