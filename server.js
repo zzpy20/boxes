@@ -68,7 +68,7 @@ function auth(req, res, next) {
 // Tells the frontend to use relative URLs instead of the Cloudflare worker URL
 app.get('/api-config.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.send('window.__BOXES_API_BASE__="";');
+  res.send('window.__BOXES_API_BASE__=window.location.origin+"/";');
 });
 
 // ── boxes.json (served from data dir so it survives edits) ────────────────────
