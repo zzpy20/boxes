@@ -139,7 +139,10 @@ function updateSearchIndex(){
 // ── Rename ──────────────────────────────────────────────────────────────────
 var renamingFile=null;
 function openRenameModal(name){
-  renamingFile=name;$("renameOldName").textContent=name;$("renameNewName").value=name;
+  renamingFile=name;$("renameOldName").textContent=name;
+  // Show only the filename part — folder prefix is preserved automatically in doRename
+  var filename=name.includes("/")?name.slice(name.lastIndexOf("/")+1):name;
+  $("renameNewName").value=filename;
   $("renameModal").classList.remove("hidden");
   setTimeout(function(){var inp=$("renameNewName");inp.focus();inp.select();},50);
 }
@@ -147,10 +150,9 @@ function closeRenameModal(){$("renameModal").classList.add("hidden");renamingFil
 function doRename(){
   if(!renamingFile)return;
   var newName=($("renameNewName").value||"").trim();
-  if(!newName||newName===renamingFile){closeRenameModal();return;}
-  // Keep in same folder: replace only the filename part
   var folder=renamingFile.includes("/")?renamingFile.slice(0,renamingFile.lastIndexOf("/")+1):"";
   var toPath=folder+newName;
+  if(!newName||toPath===renamingFile){closeRenameModal();return;};
   setStatus("Renaming...");
   fetch(mediaRenameUrl(BOX_ID,renamingFile,toPath,TOKEN),{method:"POST"})
     .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("rename_failed");})

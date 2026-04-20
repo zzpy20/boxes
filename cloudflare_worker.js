@@ -252,8 +252,8 @@ async function handleMedia(request, env, origin, tokenOk) {
 
   // RENAME FILE
   if (parts.length === 3 && parts[2] === "rename" && request.method === "POST") {
-    const fromName = sanitizeFilename(safeDecodePathPart(url.searchParams.get("from") || ""));
-    const toName = sanitizeFilename(safeDecodePathPart(url.searchParams.get("to") || ""));
+    const fromName = sanitizePath(safeDecodePathPart(url.searchParams.get("from") || ""));
+    const toName = sanitizePath(safeDecodePathPart(url.searchParams.get("to") || ""));
     if (!fromName || !toName) return json({ ok: false, error: "missing_params" }, 400, corsHeaders(origin));
     const fromKey = prefix + fromName;
     const toKey = prefix + toName;
