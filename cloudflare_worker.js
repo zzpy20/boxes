@@ -169,7 +169,8 @@ async function handleMedia(request, env, origin, tokenOk) {
     if (!files || files.length === 0) {
       return json({ ok: false, error: "no_files" }, 400, corsHeaders(origin));
     }
-    const folderParam = sanitizeFilename(url.searchParams.get("folder") || "");
+    const rawFolder = url.searchParams.get("folder") || "";
+    const folderParam = rawFolder ? sanitizePath(rawFolder) : "";
     let saved = 0;
     for (const item of files) {
       if (!(item instanceof File)) continue;

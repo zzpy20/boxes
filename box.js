@@ -304,6 +304,22 @@ function permanentDeleteTrashItem(idx){
     }).then(function(){updateTrashBtn();renderTrashModal();})
     .catch(handleErr);
 }
+function restoreAll(){
+  if(!boxTrash.length)return;
+  var items=boxTrash.slice();
+  var chain=Promise.resolve();
+  items.forEach(function(item){
+    chain=chain.then(function(){
+      return fetch(mediaMoveUrl(BOX_ID,item.trashedPath,item.originalPath,TOKEN),{method:"POST"})
+        .then(function(r){if(r.status===401)throw new Error("unauthorized");});
+    });
+  });
+  chain.then(function(){
+    items.forEach(function(item){if(item.meta)META[item.originalPath]=item.meta;});
+    boxTrash=[];return saveTrash().then(function(){return saveMeta();});
+  }).then(function(){updateTrashBtn();renderTrashModal();return refreshList();})
+  .catch(handleErr);
+}
 function emptyTrash(){
   if(!boxTrash.length)return;
   if(!confirm("Permanently delete all "+boxTrash.length+" item(s) in trash? This cannot be undone."))return;
@@ -825,6 +841,7 @@ function wireButtons(){
   var nfb=$("newFolderBtn");if(nfb)nfb.onclick=function(){openNewFolderModal();};
   var tb=$("trashBtn");if(tb)tb.onclick=function(){openTrashModal();};
   $("emptyTrashBtn").onclick=function(){emptyTrash();};
+  $("restoreAllBtn").onclick=function(){restoreAll()};
   $("trashClose").onclick=function(){closeTrashModal();};
   $("trashModal").addEventListener("click",function(e){if(e.target===$("trashModal"))closeTrashModal();});
   $("newFolderCancel").onclick=function(){closeNewFolderModal();};

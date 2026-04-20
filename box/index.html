@@ -433,6 +433,7 @@
     <div class="editBody" id="trashBody" style="max-height:400px;overflow-y:auto;padding:8px 20px 0"></div>
     <div class="editFoot">
       <button class="btn danger sm" id="emptyTrashBtn">Empty trash</button>
+      <button class="btn" id="restoreAllBtn">Restore all</button>
       <button class="btn" id="trashClose">Close</button>
     </div>
   </div>
@@ -479,6 +480,6 @@
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=10"></script>
+<script src="../box.js?v=11"></script>
 </body>
 </html>
