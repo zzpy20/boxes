@@ -70,6 +70,7 @@ var noteText="";
 var currentPath="";
 var allFiles=[];
 var boxFolders=[];
+var boxTrash=[];
 var draggedFile=null;
 
 function $(id){return document.getElementById(id);}
@@ -230,7 +231,87 @@ function loadFolders(){
       if(!Array.isArray(idx))idx=[];
       var entry=idx.find(function(e){return e.boxId===BOX_ID;})||{};
       boxFolders=Array.isArray(entry.boxFolders)?entry.boxFolders:[];
-    }).catch(function(){boxFolders=[];});
+      boxTrash=Array.isArray(entry.boxTrash)?entry.boxTrash:[];
+      updateTrashBtn();
+    }).catch(function(){boxFolders=[];boxTrash=[];});
+}
+function saveTrash(){
+  return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[];})
+    .then(function(idx){
+      if(!Array.isArray(idx))idx=[];
+      var existing=idx.find(function(e){return e.boxId===BOX_ID;});
+      var entry=Object.assign({},existing||{},{boxId:BOX_ID,boxTrash:boxTrash});
+      var found=false;
+      for(var i=0;i<idx.length;i++){if(idx[i].boxId===BOX_ID){idx[i]=entry;found=true;break;}}
+      if(!found)idx.push(entry);
+      return fetch(searchIndexPostUrl(TOKEN),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(idx)});
+    });
+}
+function updateTrashBtn(){
+  var btn=$("trashBtn");if(!btn)return;
+  var n=boxTrash.length;
+  btn.textContent="Trash"+(n>0?" ("+n+")":"");
+  btn.className="btn"+(n>0?" danger":"");
+}
+function openTrashModal(){renderTrashModal();$("trashModal").classList.remove("hidden");}
+function closeTrashModal(){$("trashModal").classList.add("hidden");}
+function renderTrashModal(){
+  var body=$("trashBody"),sub=$("trashSubtitle");
+  if(!body)return;
+  body.innerHTML="";
+  if(sub)sub.textContent=boxTrash.length+" item"+(boxTrash.length===1?"":"s");
+  if(!boxTrash.length){
+    var p=document.createElement("p");p.style.cssText="color:var(--muted);font-size:13px;text-align:center;padding:20px 0";
+    p.textContent="Trash is empty";body.appendChild(p);return;
+  }
+  boxTrash.forEach(function(item,idx){
+    var row=document.createElement("div");row.className="trash-item";
+    var icon=document.createElement("div");icon.className="trash-icon";icon.textContent=fileIcon(item.name);
+    var info=document.createElement("div");info.className="trash-info";
+    var name=document.createElement("div");name.className="trash-name";name.textContent=item.name;
+    var meta=document.createElement("div");meta.className="trash-meta";
+    var from=item.originalPath.includes("/")?("from "+item.originalPath.slice(0,item.originalPath.lastIndexOf("/"))):"root";
+    meta.textContent=from+" · "+fmtDate(item.deletedAt);
+    info.appendChild(name);info.appendChild(meta);
+    var btns=document.createElement("div");btns.className="trash-btns";
+    var restoreBtn=document.createElement("button");restoreBtn.className="btn sm";restoreBtn.textContent="Restore";
+    restoreBtn.onclick=(function(i){return function(){restoreTrashItem(i);};})(idx);
+    var delBtn=document.createElement("button");delBtn.className="btn sm danger";delBtn.textContent="Delete";
+    delBtn.onclick=(function(i){return function(){permanentDeleteTrashItem(i);};})(idx);
+    btns.appendChild(restoreBtn);btns.appendChild(delBtn);
+    row.appendChild(icon);row.appendChild(info);row.appendChild(btns);
+    body.appendChild(row);
+  });
+}
+function restoreTrashItem(idx){
+  var item=boxTrash[idx];if(!item)return;
+  fetch(mediaMoveUrl(BOX_ID,item.trashedPath,item.originalPath,TOKEN),{method:"POST"})
+    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("restore_failed");
+      if(item.meta)META[item.originalPath]=item.meta;
+      boxTrash.splice(idx,1);
+      return saveTrash().then(function(){return saveMeta();});
+    }).then(function(){return refreshList();})
+    .then(function(){return updateSearchIndex();})
+    .then(function(){updateTrashBtn();renderTrashModal();})
+    .catch(handleErr);
+}
+function permanentDeleteTrashItem(idx){
+  var item=boxTrash[idx];if(!item)return;
+  if(!confirm("Permanently delete \""+item.name+"\"? This cannot be undone."))return;
+  fetch(mediaDeleteOneUrl(BOX_ID,item.trashedPath,TOKEN),{method:"DELETE"})
+    .then(function(r){if(r.status===401)throw new Error("unauthorized");
+      boxTrash.splice(idx,1);return saveTrash();
+    }).then(function(){updateTrashBtn();renderTrashModal();})
+    .catch(handleErr);
+}
+function emptyTrash(){
+  if(!boxTrash.length)return;
+  if(!confirm("Permanently delete all "+boxTrash.length+" item(s) in trash? This cannot be undone."))return;
+  fetch(mediaDeleteFolderUrl(BOX_ID,"_trash",TOKEN),{method:"DELETE"})
+    .then(function(r){if(r.status===401)throw new Error("unauthorized");
+      boxTrash=[];return saveTrash();
+    }).then(function(){updateTrashBtn();renderTrashModal();})
+    .catch(handleErr);
 }
 function saveFolders(){
   return fetch(searchIndexGetUrl(TOKEN),{cache:"no-store"}).then(function(r){return r.ok?r.json():[];})
@@ -301,17 +382,19 @@ function doRenameFolder(){
 }
 
 function doDeleteFolder(name,count){
-  var msg=count>0?"Delete '"+name+"' and all "+count+" file"+(count===1?"":"s")+" inside?"
-                 :"Delete empty folder '"+name+"'?";
-  if(!confirm(msg))return;
-  setStatus("Deleting folder...");
-  fetch(mediaDeleteFolderUrl(BOX_ID,name,TOKEN),{method:"DELETE"})
-    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("delete_folder_failed");})
-    .then(function(){
-      boxFolders=boxFolders.filter(function(f){return f!==name;});
-      Object.keys(META).forEach(function(k){if(k.startsWith(name+"/"))delete META[k];});
-      return saveFolders().then(function(){return refreshList();}).then(function(){return updateSearchIndex();});
-    }).catch(handleErr);
+  if(count===0){
+    if(!confirm("Delete empty folder '"+name+"'?"))return;
+    boxFolders=boxFolders.filter(function(f){return f!==name;});
+    saveFolders().then(function(){renderCurrentPath();}).catch(handleErr);
+    return;
+  }
+  if(!confirm("Move '"+name+"' and all "+count+" file"+(count===1?"":"s")+" inside to trash?"))return;
+  setStatus("Moving to trash...");
+  var filesToTrash=allFiles.filter(function(f){return f.name.startsWith(name+"/");});
+  softDeleteFiles(filesToTrash.map(function(f){return f.name;}),function(){
+    boxFolders=boxFolders.filter(function(f){return f!==name;});
+    saveFolders().catch(handleErr);
+  }).catch(handleErr);
 }
 
 function openMoveModal(){
@@ -355,7 +438,7 @@ var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();closeRenameFolderModal();}
+  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();closeRenameFolderModal();closeTrashModal();}
 });
 function showCtxMenu(e,items){
   e.stopPropagation();closeCtxMenu();
@@ -633,19 +716,37 @@ function refreshList(){
     });
 }
 
+function softDeleteFiles(names,onDone){
+  var newItems=[];
+  var chain=Promise.resolve();
+  names.forEach(function(name){
+    chain=chain.then(function(){
+      var trashPath="_trash/"+name;
+      return fetch(mediaMoveUrl(BOX_ID,name,trashPath,TOKEN),{method:"POST"})
+        .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("trash_failed");
+          var m=META[name]||{};
+          newItems.push({name:name.split("/").pop(),trashedPath:trashPath,originalPath:name,deletedAt:new Date().toISOString(),meta:{caption:m.caption||"",tags:m.tags||[]}});
+          delete META[name];
+        });
+    });
+  });
+  return chain.then(function(){
+    boxTrash=boxTrash.concat(newItems);
+    return saveTrash().then(function(){return saveMeta();});
+  }).then(function(){return refreshList();})
+    .then(function(){return updateSearchIndex();})
+    .then(function(){updateTrashBtn();if(onDone)onDone();});
+}
 function deleteFile(name){
-  if(!confirm("Delete \""+name+"\"?"))return;setStatus("Deleting...");
-  fetch(mediaDeleteOneUrl(BOX_ID,name,TOKEN),{method:"DELETE"})
-    .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Delete failed.");return refreshList();})
-    .then(function(){return updateSearchIndex();}).catch(handleErr);
+  if(!confirm("Move \""+name+"\" to trash?"))return;
+  setStatus("Moving to trash...");
+  softDeleteFiles([name]).catch(handleErr);
 }
 function deleteSelected(){
   var names=Object.keys(selectedFiles);if(!names.length)return;
-  if(!confirm("Delete "+names.length+" selected file(s)?"))return;
-  $("actionBar").classList.remove("visible");setStatus("Deleting...");
-  var chain=Promise.resolve();
-  names.forEach(function(name){chain=chain.then(function(){return fetch(mediaDeleteOneUrl(BOX_ID,name,TOKEN),{method:"DELETE"}).then(function(r){if(r.status===401)throw new Error("unauthorized");});});});
-  chain.then(function(){return refreshList();}).then(function(){return updateSearchIndex();}).catch(handleErr);
+  if(!confirm("Move "+names.length+" file(s) to trash?"))return;
+  $("actionBar").classList.remove("visible");setStatus("Moving to trash...");
+  softDeleteFiles(names).catch(handleErr);
 }
 
 function uploadFiles(files){
@@ -722,6 +823,10 @@ function wireButtons(){
   updateSortUI();
   var si=$("searchInput");if(si){si.addEventListener("input",function(){searchTerm=si.value;applySearch();});}
   var nfb=$("newFolderBtn");if(nfb)nfb.onclick=function(){openNewFolderModal();};
+  var tb=$("trashBtn");if(tb)tb.onclick=function(){openTrashModal();};
+  $("emptyTrashBtn").onclick=function(){emptyTrash();};
+  $("trashClose").onclick=function(){closeTrashModal();};
+  $("trashModal").addEventListener("click",function(e){if(e.target===$("trashModal"))closeTrashModal();});
   $("newFolderCancel").onclick=function(){closeNewFolderModal();};
   $("newFolderSave").onclick=function(){doCreateFolder();};
   $("newFolderModal").addEventListener("click",function(e){if(e.target===$("newFolderModal"))closeNewFolderModal();});

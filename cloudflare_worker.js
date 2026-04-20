@@ -144,7 +144,7 @@ async function handleMedia(request, env, origin, tokenOk) {
       const res = await env.BOX_R2.list({ prefix, cursor, limit: 1000 });
       for (const obj of res.objects) {
         const name = obj.key.slice(prefix.length);
-        if (name === "_meta" || name === "note" || name === "_cover") continue;
+        if (name === "_meta" || name === "note" || name === "_cover" || name.startsWith("_trash/")) continue;
         out.push({
           name,
           size: obj.size,
