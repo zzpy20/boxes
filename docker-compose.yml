@@ -1,0 +1,14 @@
+services:
+  boxes:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - boxes-data:/data
+    environment:
+      - AUTH_TOKEN=changeme   # Change this to your own passphrase
+      - PORT=3000
+    restart: unless-stopped
+
+volumes:
+  boxes-data:

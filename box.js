@@ -1,5 +1,5 @@
 // box.js v15 - folders
-const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
+const WORKER_BASE=(typeof window!=="undefined"&&window.__BOXES_API_BASE__!==undefined)?window.__BOXES_API_BASE__:"https://box-redirect.ausz.workers.dev/";
 const TOKEN_STORAGE_KEY="boxes_auth_token";
 const TOKEN_PARAM="t";
 

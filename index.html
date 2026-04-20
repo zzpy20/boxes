@@ -244,9 +244,10 @@
   <span id="stamp"></span>
 </footer>
 
+<script src="/api-config.js"></script>
 <script>
 const TOKEN_KEY="boxes_auth_token";
-const WORKER_BASE="https://box-redirect.ausz.workers.dev/";
+const WORKER_BASE=(typeof window!=="undefined"&&window.__BOXES_API_BASE__!==undefined)?window.__BOXES_API_BASE__:"https://box-redirect.ausz.workers.dev/";
 const GITHUB_REPO="zzpy20/boxes";
 const GITHUB_API="https://api.github.com/repos/"+GITHUB_REPO+"/contents/boxes.json";
 

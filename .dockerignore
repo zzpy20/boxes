@@ -1,0 +1,9 @@
+.git
+.gitignore
+.DS_Store
+node_modules
+data
+cloudflare_worker.js
+Next_steps.md
+README.md
+*.md
