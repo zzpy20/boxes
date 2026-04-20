@@ -289,7 +289,9 @@ function restoreTrashItem(idx){
     .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("restore_failed");
       if(item.meta)META[item.originalPath]=item.meta;
       boxTrash.splice(idx,1);
-      return saveTrash().then(function(){return saveMeta();});
+      var parts=item.originalPath.split("/");
+      if(parts.length>1){var folder=parts[0];if(boxFolders.indexOf(folder)===-1)boxFolders.push(folder);}
+      return saveTrash().then(function(){return saveMeta();}).then(function(){return saveFolders();});
     }).then(function(){return refreshList();})
     .then(function(){return updateSearchIndex();})
     .then(function(){updateTrashBtn();renderTrashModal();})
@@ -315,8 +317,12 @@ function restoreAll(){
     });
   });
   chain.then(function(){
-    items.forEach(function(item){if(item.meta)META[item.originalPath]=item.meta;});
-    boxTrash=[];return saveTrash().then(function(){return saveMeta();});
+    items.forEach(function(item){
+      if(item.meta)META[item.originalPath]=item.meta;
+      var parts=item.originalPath.split("/");
+      if(parts.length>1){var folder=parts[0];if(boxFolders.indexOf(folder)===-1)boxFolders.push(folder);}
+    });
+    boxTrash=[];return saveTrash().then(function(){return saveMeta();}).then(function(){return saveFolders();});
   }).then(function(){updateTrashBtn();renderTrashModal();return refreshList();})
   .catch(handleErr);
 }
