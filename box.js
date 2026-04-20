@@ -255,6 +255,20 @@ function updateTrashBtn(){
 }
 function openTrashModal(){renderTrashModal();$("trashModal").classList.remove("hidden");}
 function closeTrashModal(){$("trashModal").classList.add("hidden");}
+function openLabelModal(){
+  var uid=($("infoUid")&&$("infoUid").value.trim())||"";
+  var url=window.location.origin+window.location.pathname+"?id="+BOX_ID;
+  $("labelBoxName").textContent="BOX-"+BOX_ID;
+  var uidEl=$("labelUidText"),noUid=$("labelNoUid");
+  if(uid){uidEl.textContent=uid;uidEl.style.display="";if(noUid)noUid.style.display="none";}
+  else{uidEl.textContent="";uidEl.style.display="none";if(noUid)noUid.style.display="";}
+  var qrDiv=$("labelQr");qrDiv.innerHTML="";
+  if(typeof QRCode!=="undefined"){
+    new QRCode(qrDiv,{text:url,width:160,height:160,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  }else{qrDiv.textContent="QR library not loaded.";}
+  $("labelModal").classList.remove("hidden");
+}
+function closeLabelModal(){$("labelModal").classList.add("hidden");}
 function openPreviewModal(name,fileUrl,ext){
   var title=$("previewTitle");if(title)title.textContent=name.split("/").pop();
   var openBtn=$("previewOpenBtn");if(openBtn)openBtn.href=fileUrl;
@@ -476,7 +490,7 @@ var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();closeRenameFolderModal();closeTrashModal();closePreviewModal();}
+  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();closeRenameFolderModal();closeTrashModal();closePreviewModal();closeLabelModal();}
 });
 function showCtxMenu(e,items){
   e.stopPropagation();closeCtxMenu();
@@ -880,7 +894,11 @@ function wireButtons(){
   var si=$("searchInput");if(si){si.addEventListener("input",function(){searchTerm=si.value;applySearch();});}
   var nfb=$("newFolderBtn");if(nfb)nfb.onclick=function(){openNewFolderModal();};
   var tb=$("trashBtn");if(tb)tb.onclick=function(){openTrashModal();};
-  $("previewClose").onclick=function(){closePreviewModal();};
+  var lb=$("labelBtn");if(lb)lb.onclick=function(){openLabelModal();};
+  $("labelClose").onclick=function(){closeLabelModal();};
+  $("labelPrint").onclick=function(){window.print();};
+  $("labelModal").addEventListener("click",function(e){if(e.target===$("labelModal"))closeLabelModal();});
+  $("previewClose").onclick=function(){closePreviewModal()};
   $("previewModal").addEventListener("click",function(e){if(e.target===$("previewModal"))closePreviewModal();});
   $("emptyTrashBtn").onclick=function(){emptyTrash()};
   $("restoreAllBtn").onclick=function(){restoreAll()};
