@@ -811,10 +811,19 @@ function wireButtons(){
   $("fileIn").onchange=function(e){var f=e.target.files;if(f&&f.length)uploadFiles(f).catch(handleErr);};
   $("uploadBtn").onclick=function(){$("fileIn").click();};
   $("clearBtn").onclick=function(){
-    if(!confirm("Delete ALL files in this box?"))return;setStatus("Clearing...");
-    fetch(mediaClearUrl(BOX_ID,TOKEN),{method:"DELETE"})
-      .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Clear failed.");return refreshList();})
-      .then(function(){return updateSearchIndex();}).catch(handleErr);
+    if(currentPath){
+      var folderName=currentPath.replace(/\/$/,"");
+      var filesInFolder=allFiles.filter(function(f){return f.name.startsWith(folderName+"/");});
+      if(!filesInFolder.length){alert("No files in this folder.");return;}
+      if(!confirm("Delete all "+filesInFolder.length+" file(s) in folder '"+folderName+"'?\nOnly the files will be removed — the folder itself will be kept."))return;
+      setStatus("Moving to trash...");
+      softDeleteFiles(filesInFolder.map(function(f){return f.name;})).catch(handleErr);
+    }else{
+      if(!confirm("Delete ALL files in this box?"))return;setStatus("Clearing...");
+      fetch(mediaClearUrl(BOX_ID,TOKEN),{method:"DELETE"})
+        .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)alert("Clear failed.");return refreshList();})
+        .then(function(){return updateSearchIndex();}).catch(handleErr);
+    }
   };
   $("actionDelete").onclick=function(){deleteSelected();};
   $("actionCancel").onclick=function(){clearSelection();};
