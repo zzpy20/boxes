@@ -192,6 +192,22 @@
     .link-icon-btn.danger{color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg);}
     .sort-select{font-family:var(--font);font-size:12px;font-weight:500;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;outline:none;}
     .sort-select:focus{border-color:var(--text);}
+
+    /* Folder nav */
+    .folder-nav{display:flex;align-items:center;gap:8px;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+    .folder-nav.hidden{display:none;}
+    .folder-nav-back{font-family:var(--font);font-size:13px;font-weight:500;background:transparent;border:none;cursor:pointer;color:var(--muted);padding:4px 8px 4px 4px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:4px;}
+    .folder-nav-back:hover{color:var(--text);background:var(--surface-2);}
+    .folder-nav-name{font-size:13px;font-weight:600;color:var(--text);}
+
+    /* Folder row */
+    .folder-row .fileName{color:var(--text);}
+    .folder-row:hover{background:var(--surface-2);}
+    .fileRow.drag-over{background:var(--surface-2);outline:2px dashed var(--border-strong);outline-offset:-2px;}
+
+    /* Move modal options */
+    .move-opt-btn{display:block;width:100%;text-align:left;font-family:var(--font);font-size:14px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;margin-bottom:6px;}
+    .move-opt-btn:hover:not(:disabled){background:var(--surface-2);}
   </style>
 </head>
 <body>
@@ -293,9 +309,15 @@
         <div class="files-actions">
           <input id="fileIn" type="file" style="display:none" multiple />
           <button class="btn primary" id="uploadBtn">Upload</button>
+          <button class="btn" id="newFolderBtn">New folder</button>
           <button class="btn" id="refreshBtn">Refresh</button>
           <button class="btn danger" id="clearBtn">Clear all</button>
         </div>
+      </div>
+      <div class="folder-nav hidden" id="folderNav">
+        <button class="folder-nav-back" id="folderNavBack">← Back</button>
+        <span style="color:var(--muted);font-size:12px">›</span>
+        <span class="folder-nav-name" id="folderNavName"></span>
       </div>
       <div class="select-toolbar hidden" id="selectToolbar">
         <button class="btn sm" id="selectAllBtn">Select all</button>
@@ -325,6 +347,33 @@
       <button class="btn" id="editCancel">Cancel</button>
       <button class="btn primary" id="editSave">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- New folder modal -->
+<div class="editModal hidden" id="newFolderModal">
+  <div class="editCard">
+    <div class="editHead"><div class="editTitle">New folder</div></div>
+    <div class="editBody">
+      <div class="editLabel">Folder name</div>
+      <input class="editInput" id="newFolderName" type="text" placeholder="e.g. photos, documents…" style="margin-bottom:0" />
+    </div>
+    <div class="editFoot">
+      <button class="btn" id="newFolderCancel">Cancel</button>
+      <button class="btn primary" id="newFolderSave">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Move to folder modal -->
+<div class="editModal hidden" id="moveModal">
+  <div class="editCard">
+    <div class="editHead">
+      <div class="editTitle">Move to…</div>
+      <div class="editSubtitle" id="moveSubtitle"></div>
+    </div>
+    <div class="editBody" id="moveBody"></div>
+    <div class="editFoot"><button class="btn" id="moveCancel">Cancel</button></div>
   </div>
 </div>
 
@@ -367,6 +416,8 @@
   <div class="action-bar-divider"></div>
   <button class="action-bar-btn" id="actionTag">Tag</button>
   <div class="action-bar-divider"></div>
+  <button class="action-bar-btn" id="actionMove">Move</button>
+  <div class="action-bar-divider"></div>
   <button class="action-bar-btn del" id="actionDelete">Delete</button>
   <div class="action-bar-divider"></div>
   <button class="action-bar-btn" id="actionCancel">Cancel</button>
@@ -385,6 +436,6 @@
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=7"></script>
+<script src="../box.js?v=8"></script>
 </body>
 </html>

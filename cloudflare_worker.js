@@ -73,6 +73,10 @@ function sanitizeFilename(name) {
   return s;
 }
 
+function sanitizePath(p){
+  return String(p||"").split("/").map(s=>sanitizeFilename(s)).filter(Boolean).join("/")||"file";
+}
+
 function legacySanitize(s){
   // Old v2 behavior: replace non-ASCII-ish chars with underscores (kept for backwards compatibility)
   return String(s||"")
@@ -165,11 +169,12 @@ async function handleMedia(request, env, origin, tokenOk) {
     if (!files || files.length === 0) {
       return json({ ok: false, error: "no_files" }, 400, corsHeaders(origin));
     }
+    const folderParam = sanitizeFilename(url.searchParams.get("folder") || "");
     let saved = 0;
     for (const item of files) {
       if (!(item instanceof File)) continue;
       const clean = sanitizeFilename(item.name || "file");
-      const key = prefix + clean;
+      const key = folderParam ? `${prefix}${folderParam}/${clean}` : `${prefix}${clean}`;
       await env.BOX_R2.put(key, item.stream(), {
         httpMetadata: { contentType: item.type || "application/octet-stream" },
       });
@@ -197,16 +202,52 @@ async function handleMedia(request, env, origin, tokenOk) {
 
   // DELETE ONE
   if (parts.length === 3 && parts[2] === "file" && request.method === "DELETE") {
-    const name = url.searchParams.get("name") || "";
-    const clean = sanitizeFilename(safeDecodePathPart(name));
-    if (!clean) return json({ ok: false, error: "missing_name" }, 400, corsHeaders(origin));
-    const key = prefix + clean;
-    const alt1 = prefix + legacySanitize(clean);
-    const alt2 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
-    const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, " ");
-    const candidates = Array.from(new Set([key, alt1, alt2, alt3]));
-    await env.BOX_R2.delete(candidates);
+    const rawName = safeDecodePathPart(url.searchParams.get("name") || "");
+    const cleanPath = sanitizePath(rawName);
+    if (!cleanPath || cleanPath === "file") return json({ ok: false, error: "missing_name" }, 400, corsHeaders(origin));
+    const key = prefix + cleanPath;
+    if (cleanPath.includes("/")) {
+      // File in a folder — exact key only
+      await env.BOX_R2.delete(key);
+    } else {
+      // Root file — include legacy alternate keys for backwards compatibility
+      const clean = sanitizeFilename(rawName);
+      const alt1 = prefix + legacySanitize(clean);
+      const alt2 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, "_");
+      const alt3 = prefix + clean.replace(/[\u00A0\u202F\u2007]/g, " ");
+      await env.BOX_R2.delete(Array.from(new Set([key, alt1, alt2, alt3])));
+    }
     return json({ ok: true }, 200, corsHeaders(origin));
+  }
+
+  // MOVE FILE (path-aware copy+delete, supports folder paths)
+  if (parts.length === 3 && parts[2] === "move" && request.method === "POST") {
+    const fromPath = sanitizePath(safeDecodePathPart(url.searchParams.get("from") || ""));
+    const toPath = sanitizePath(safeDecodePathPart(url.searchParams.get("to") || ""));
+    if (!fromPath || !toPath || fromPath === "file" || toPath === "file") {
+      return json({ ok: false, error: "missing_params" }, 400, corsHeaders(origin));
+    }
+    const src = await env.BOX_R2.get(prefix + fromPath);
+    if (!src) return json({ ok: false, error: "not_found" }, 404, corsHeaders(origin));
+    const ct = src.httpMetadata?.contentType || "application/octet-stream";
+    await env.BOX_R2.put(prefix + toPath, src.body, { httpMetadata: { contentType: ct } });
+    await env.BOX_R2.delete(prefix + fromPath);
+    return json({ ok: true }, 200, corsHeaders(origin));
+  }
+
+  // DELETE FOLDER (deletes all files with folder prefix)
+  if (parts.length === 3 && parts[2] === "folder" && request.method === "DELETE") {
+    const folderName = sanitizeFilename(safeDecodePathPart(url.searchParams.get("name") || ""));
+    if (!folderName) return json({ ok: false, error: "missing_name" }, 400, corsHeaders(origin));
+    const folderPrefix = prefix + folderName + "/";
+    let cursor = undefined, deleted = 0;
+    for (let i = 0; i < 20; i++) {
+      const res = await env.BOX_R2.list({ prefix: folderPrefix, cursor, limit: 1000 });
+      if (res.objects.length) { await env.BOX_R2.delete(res.objects.map(o => o.key)); deleted += res.objects.length; }
+      if (!res.truncated) break;
+      cursor = res.cursor;
+    }
+    return json({ ok: true, deleted }, 200, corsHeaders(origin));
   }
 
   // RENAME FILE
