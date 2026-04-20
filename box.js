@@ -265,6 +265,41 @@ function doCreateFolder(){
   boxFolders.push(name);
   saveFolders().then(function(){renderCurrentPath();closeNewFolderModal();}).catch(handleErr);
 }
+function openRenameFolderModal(name){
+  $("renameFolderOldName").textContent=name;
+  $("renameFolderInput").value=name;
+  $("renameFolderModal").classList.remove("hidden");
+  setTimeout(function(){var inp=$("renameFolderInput");inp.focus();inp.select();},50);
+  $("renameFolderModal")._folderName=name;
+}
+function closeRenameFolderModal(){$("renameFolderModal").classList.add("hidden");}
+function doRenameFolder(){
+  var modal=$("renameFolderModal");
+  var oldName=modal._folderName;
+  var newName=($("renameFolderInput").value||"").trim().replace(/[/\\]/g,"").slice(0,60);
+  if(!newName||newName===oldName){closeRenameFolderModal();return;}
+  if(getFolderList().indexOf(newName)>=0){alert("A folder named '"+newName+"' already exists.");return;}
+  var filesToMove=allFiles.filter(function(f){return f.name.startsWith(oldName+"/");});
+  setStatus("Renaming folder…");closeRenameFolderModal();
+  var chain=Promise.resolve();
+  filesToMove.forEach(function(f){
+    chain=chain.then(function(){
+      var filename=f.name.slice(oldName.length+1);
+      var toPath=newName+"/"+filename;
+      return fetch(mediaMoveUrl(BOX_ID,f.name,toPath,TOKEN),{method:"POST"})
+        .then(function(r){if(r.status===401)throw new Error("unauthorized");if(!r.ok)throw new Error("move_failed");
+          if(META[f.name]){META[toPath]=META[f.name];delete META[f.name];}
+        });
+    });
+  });
+  chain.then(function(){
+    boxFolders=boxFolders.map(function(f){return f===oldName?newName:f;});
+    return saveFolders().then(function(){return saveMeta();});
+  }).then(function(){return refreshList();})
+    .then(function(){return updateSearchIndex();})
+    .catch(handleErr);
+}
+
 function doDeleteFolder(name,count){
   var msg=count>0?"Delete '"+name+"' and all "+count+" file"+(count===1?"":"s")+" inside?"
                  :"Delete empty folder '"+name+"'?";
@@ -320,7 +355,7 @@ var activeCtxMenu=null;
 function closeCtxMenu(){if(activeCtxMenu){activeCtxMenu.remove();activeCtxMenu=null;}}
 document.addEventListener("click",closeCtxMenu);
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();}
+  if(e.key==="Escape"){closeCtxMenu();closeEditModal();closeRenameModal();closeNewFolderModal();closeMoveModal();closeRenameFolderModal();}
 });
 function showCtxMenu(e,items){
   e.stopPropagation();closeCtxMenu();
@@ -514,7 +549,11 @@ function makeFolderRowEl(name,count){
 
   var menuBtn=document.createElement("button");menuBtn.className="menuBtn";menuBtn.textContent="⋯";menuBtn.title="More";
   menuBtn.onclick=function(e){
-    showCtxMenu(e,[{label:"Delete folder",danger:true,action:function(){doDeleteFolder(name,count);}}]);
+    showCtxMenu(e,[
+      {label:"Rename folder",action:function(){openRenameFolderModal(name);}},
+      "divider",
+      {label:"Delete folder",danger:true,action:function(){doDeleteFolder(name,count);}}
+    ]);
   };
 
   // Drop target for dragging files into this folder
@@ -689,6 +728,10 @@ function wireButtons(){
   var nfn=$("newFolderName");if(nfn)nfn.addEventListener("keydown",function(e){if(e.key==="Enter")doCreateFolder();});
   $("moveCancel").onclick=function(){closeMoveModal();};
   $("moveModal").addEventListener("click",function(e){if(e.target===$("moveModal"))closeMoveModal();});
+  $("renameFolderCancel").onclick=function(){closeRenameFolderModal();};
+  $("renameFolderSave").onclick=function(){doRenameFolder();};
+  $("renameFolderModal").addEventListener("click",function(e){if(e.target===$("renameFolderModal"))closeRenameFolderModal();});
+  var rfi=$("renameFolderInput");if(rfi)rfi.addEventListener("keydown",function(e){if(e.key==="Enter")doRenameFolder();});
   var fnb=$("folderNavBack");if(fnb)fnb.onclick=function(){navigateUp();};
 }
 
