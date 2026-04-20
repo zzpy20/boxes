@@ -217,6 +217,23 @@
     /* Move modal options */
     .move-opt-btn{display:block;width:100%;text-align:left;font-family:var(--font);font-size:14px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;margin-bottom:6px;}
     .move-opt-btn:hover:not(:disabled){background:var(--surface-2);}
+
+    /* Preview modal */
+    .previewCard{width:min(860px,100%);background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;}
+    .previewHead{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;}
+    .previewBody{padding:16px;overflow:auto;display:flex;align-items:center;justify-content:center;flex:1;background:var(--surface-2);min-height:200px;}
+    .previewBody img{max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:8px;}
+    .previewBody iframe{width:100%;height:calc(90vh - 80px);border:none;border-radius:8px;}
+    .previewBody .preview-placeholder{color:var(--muted);font-size:13px;}
+
+    /* Storage size */
+    .storage-size{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+    /* Mobile action bar */
+    @media(max-width:600px){
+      .action-bar{max-width:calc(100vw - 32px);white-space:normal;flex-wrap:wrap;border-radius:16px;}
+      .files-actions{flex-wrap:wrap;}
+    }
   </style>
 </head>
 <body>
@@ -304,6 +321,7 @@
       <div class="files-header">
         <div class="files-left">
           <div class="files-title">Files</div>
+          <span class="storage-size" id="storageSize"></span>
           <div class="view-toggle">
             <button class="btn sm active" id="btnList" onclick="setView('list')" title="List">☰</button>
             <button class="btn sm" id="btnGrid" onclick="setView('grid')" title="Grid">⊞</button>
@@ -423,6 +441,20 @@
   </div>
 </div>
 
+<!-- Preview modal -->
+<div class="editModal hidden" id="previewModal">
+  <div class="previewCard">
+    <div class="previewHead">
+      <div class="editTitle" id="previewTitle" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <a class="btn sm" id="previewOpenBtn" target="_blank" rel="noopener">Open in new tab</a>
+        <button class="btn sm" id="previewClose">✕</button>
+      </div>
+    </div>
+    <div class="previewBody" id="previewBody"></div>
+  </div>
+</div>
+
 <!-- Trash modal -->
 <div class="editModal hidden" id="trashModal">
   <div class="editCard" style="width:min(560px,100%)">
@@ -480,6 +512,6 @@
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=13"></script>
+<script src="../box.js?v=14"></script>
 </body>
 </html>
