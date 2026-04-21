@@ -19,7 +19,7 @@ echo ""
 # ── 1. System update ──────────────────────────────
 echo "[1/6] Updating system packages..."
 DEBIAN_FRONTEND=noninteractive apt-get update -qq
-DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq -o Dpkg::Options::="--force-confkeep"
+DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq -o Dpkg::Options::="--force-confold"
 
 # ── 2. Install Docker ─────────────────────────────
 echo "[2/6] Installing Docker..."
