@@ -104,7 +104,7 @@ async function main() {
   const date     = new Date().toISOString().slice(0, 10);
   const outFile  = path.join(__dirname, `boxes-backup-${date}.tar.gz`);
   log(`Packaging backup → ${path.basename(outFile)}`);
-  execSync(`tar czf "${outFile}" -C "${BACKUP_DIR}" .`);
+  execSync(`tar czf "${outFile}" --exclude="._*" -C "${BACKUP_DIR}" .`);
 
   // Clean up staging
   fs.rmSync(BACKUP_DIR, { recursive: true, force: true });

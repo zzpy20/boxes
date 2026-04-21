@@ -107,7 +107,7 @@ const SKIP = new Set(['_meta', 'note', '_cover']);
 app.get('/media/box-:id/list', auth, (req, res) => {
   const dir = boxDir(req.params.id);
   ensureBoxDir(req.params.id);
-  const files = listRecursive(dir, '').filter(n => !SKIP.has(n) && !n.startsWith('_trash/'));
+  const files = listRecursive(dir, '').filter(n => !SKIP.has(n) && !n.startsWith('_trash/') && !n.split('/').some(seg => seg.startsWith('._')));
   const result = files.map(name => {
     const stat = fs.statSync(path.join(dir, name));
     return { name, size: stat.size, lastModified: stat.mtime.toISOString() };
