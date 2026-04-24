@@ -209,9 +209,32 @@ That's it — certbot auto-configures nginx and renews the cert automatically.
 
 ---
 
+## Session 2 — VPS Setup Script + DigitalOcean Deployment
+
+### 10. One-command VPS Setup Script (`setup.sh`)
+- Automates full Ubuntu VPS setup: Docker, nginx, ufw firewall, repo clone, app start
+- Run: `curl -fsSL "https://raw.githubusercontent.com/zzpy20/boxes/main/setup.sh?$(date +%s)" | AUTH_TOKEN=yourpassword bash`
+- Use `?$(date +%s)` cache-buster to always get the latest version
+- Key fix: `DEBIAN_FRONTEND=noninteractive` + `--force-confold` prevents apt from hanging on interactive SSH config prompts
+
+### 11. macOS `._*` Metadata File Fix
+- macOS creates hidden `._*` resource fork files when tar-ing on HFS+
+- These showed up as visible files in the Docker app after restore
+- Fix 1: `server.js` list endpoint now filters any path segment starting with `._`
+- Fix 2: `backup.js` tar command now uses `--exclude="._*"`
+- Clean existing: `docker exec boxes-boxes-1 find /data/files -name "._*" -delete`
+
+### Deployment flow (repeatable)
+1. Create Ubuntu 24.04 droplet/instance on any provider
+2. SSH in and run setup script with cache-buster
+3. SCP backup file to `/tmp/` on VPS
+4. Run 3 restore commands (docker volume create → alpine tar extract → compose restart)
+5. App running with all data in ~5 minutes
+
+---
+
 ## Pending / Future Ideas
-- Domain + HTTPS on Linode (have a spare domain ready)
+- Domain + HTTPS (certbot --nginx -d yourdomain.com)
 - Shareable links (KV-based share tokens — deferred, personal use only for now)
 - Nested folders (currently single-level only)
 - Bulk download as zip
-- Auto backup script for Docker volume
