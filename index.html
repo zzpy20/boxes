@@ -134,6 +134,17 @@
 
     .empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);display:none;}
     footer{max-width:1080px;margin:0 auto;padding:16px 24px 32px;color:var(--muted);font-size:12px;font-family:var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);}
+
+    /* Print all labels */
+    #labelsSheet{display:none;}
+    .labels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding:16px;}
+    .label-card{background:#fff;border:2px dashed #ccc;border-radius:12px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;break-inside:avoid;}
+    .label-card-name{font-family:monospace;font-size:18px;font-weight:700;color:#000;letter-spacing:0.08em;margin-top:4px;}
+    .label-card-uid{font-family:monospace;font-size:12px;color:#555;letter-spacing:0.04em;}
+    @media print{
+      .page,footer,.modal{display:none!important;}
+      #labelsSheet{display:block!important;}
+    }
   </style>
 </head>
 <body>
@@ -162,6 +173,7 @@
     <span class="admin-label">Admin:</span>
     <button class="btn sm primary" id="addBoxBtn">+ Add box</button>
     <button class="btn sm" id="rebuildIndexBtn">↺ Rebuild search index</button>
+    <button class="btn sm" id="printLabelsBtn">🖨 Print all labels</button>
     <button class="btn sm danger" id="trashBtn" style="display:none">🗑 Trash</button>
     <div class="progress-bar-wrap" id="rebuildProgress"><div class="progress-bar-fill" id="rebuildFill"></div></div>
     <span class="progress-label" id="rebuildLabel"></span>
@@ -244,6 +256,9 @@
   <span id="stamp"></span>
 </footer>
 
+<div id="labelsSheet"><div class="labels-grid" id="labelsGrid"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/api-config.js"></script>
 <script>
 const TOKEN_KEY="boxes_auth_token";
@@ -750,6 +765,26 @@ async function loadBoxes(){
     doSearch();
   }catch(e){console.error(e);}
 })();
+
+function printAllLabels(){
+  var grid=document.getElementById("labelsGrid");
+  grid.innerHTML="";
+  var base=window.location.href.split("?")[0].replace(/\/?$/,"/");
+  allBoxes.forEach(function(box){
+    var entry=searchIndex.find(function(e){return e.boxId===box.id;})||{};
+    var uid=entry.boxUid||"";
+    var url=base+"box/?id="+box.id;
+    var card=document.createElement("div");card.className="label-card";
+    var qrDiv=document.createElement("div");
+    new QRCode(qrDiv,{text:url,width:120,height:120,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+    var nameEl=document.createElement("div");nameEl.className="label-card-name";nameEl.textContent="BOX-"+box.id;
+    card.appendChild(qrDiv);card.appendChild(nameEl);
+    if(uid){var uidEl=document.createElement("div");uidEl.className="label-card-uid";uidEl.textContent=uid;card.appendChild(uidEl);}
+    grid.appendChild(card);
+  });
+  window.print();
+}
+document.getElementById("printLabelsBtn").addEventListener("click",printAllLabels);
 </script>
 </body>
 </html>

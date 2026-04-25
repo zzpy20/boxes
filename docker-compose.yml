@@ -6,7 +6,7 @@ services:
     volumes:
       - boxes-data:/data
     environment:
-      - AUTH_TOKEN=changeme   # Change this to your own passphrase
+      - AUTH_TOKEN=me   # Change this to your own passphrase
       - PORT=3000
     restart: unless-stopped
 

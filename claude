@@ -1,0 +1,23 @@
+⏺ Great. Anything else you'd like to improve?                                                                    
+                                                                                                                 
+❯ Can you think of anyting we can improve                                                                        
+                                                                                                                 
+⏺ Here are some worthwhile improvements, roughly by impact:                                                      
+                                                            
+  UX quick wins                                                                                                  
+  - Copy link button per file — one click copies the direct URL to clipboard                                     
+  - File preview modal — clicking an image/PDF opens a preview instead of downloading                            
+  - Empty state messages — "No files yet" / "Trash is empty" instead of blank space                              
+                                                                                                                 
+  Practicality                                                                                                   
+  - Sort preference saved — remember the chosen sort (name/size/date) per box across reloads                     
+  - Duplicate file warning — alert when uploading a file with the same name as an existing one                   
+  - Storage size indicator — show total size used on the box page (sum of file sizes from the list)              
+                                                                                                                 
+  Mobile                                                                                                         
+  - Drag-and-drop doesn't work on touch screens — the move-to-folder action bar is the only option on mobile, but
+   it could be more prominent                                                                                    
+                                                                                                                 
+  Bigger features                                                                                                
+  - Nested folders (2nd level) — currently limited to one level deep
+  - Download selected as zip — needs worker-side zip support, more complex    
