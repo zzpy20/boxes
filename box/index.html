@@ -227,6 +227,10 @@
     .previewBody img{max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;border-radius:8px;}
     .previewBody iframe{width:100%;height:calc(90vh - 80px);border:none;border-radius:8px;}
     .previewBody .preview-placeholder{color:var(--muted);font-size:13px;}
+    .previewNav{position:absolute;top:0;bottom:0;width:72px;background:transparent;border:none;color:rgba(255,255,255,0.8);font-size:52px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;z-index:1;padding:0;}
+    .previewNav:hover{background:rgba(0,0,0,0.25);color:#fff;}
+    .previewNavPrev{left:0;}
+    .previewNavNext{right:0;}
 
     /* Storage size */
     .storage-size{font-size:11px;color:var(--muted);font-family:var(--mono);}
@@ -480,6 +484,7 @@
 
 <!-- Preview modal -->
 <div class="editModal hidden" id="previewModal">
+  <button class="previewNav previewNavPrev" id="previewPrev" style="display:none">&#8249;</button>
   <div class="previewCard">
     <div class="previewHead">
       <div class="editTitle" id="previewTitle" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</div>
@@ -490,6 +495,7 @@
     </div>
     <div class="previewBody" id="previewBody"></div>
   </div>
+  <button class="previewNav previewNavNext" id="previewNext" style="display:none">&#8250;</button>
 </div>
 
 <!-- Trash modal -->
@@ -549,6 +555,6 @@
   function setView(v){currentView=v;localStorage.setItem("boxView",v);var f=document.getElementById("files"),bl=document.getElementById("btnList"),bg=document.getElementById("btnGrid");if(v==="grid"){f.classList.remove("list-view");f.classList.add("grid-view");bg.classList.add("active");bl.classList.remove("active");}else{f.classList.remove("grid-view");f.classList.add("list-view");bl.classList.add("active");bg.classList.remove("active");}}
   setView(currentView);
 </script>
-<script src="../box.js?v=16"></script>
+<script src="../box.js?v=17"></script>
 </body>
 </html>
