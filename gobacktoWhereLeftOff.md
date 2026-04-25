@@ -1,30 +1,35 @@
-if I close this session, what is the best way to come back to this context/session again. if we cant' what     
-  prompt should I use to bring you right here with complete comprehension of whats discussed in this session.    
-                                                                                                                 
-⏺ When you start a new session, just say:                                                                        
-                                                                                                                 
-  ▎ "Let's continue working on the boxes app"                                                                    
-   
-  That's it. I'll automatically load the memory I saved and have full context — the app, both deployments, all   
-  features, the code patterns, and where things stand.      
-                                                                                                                 
-  If for any reason I seem to be missing context, you can add:                                                   
-   
-  ▎ "Check your memory and also refer to SESSION_LOG.md in the repo"                                             
-                                                            
-  That gives me two layers of context — the memory file I saved, plus the detailed log in your GitHub repo. 
+# Where We Left Off
 
-❯ If I copy the whole session into a md file and feed the file to you next time, would it take long for you to   
-  read the md file. The .md file is alreay 2MB in size.                                                          
-                                                                                                                 
-⏺ 2MB of text is very large — it would consume most of my context window just reading it, leaving little room for
-   actual work. Not recommended.                                                                                 
-                                                                                                                 
-  The approach I've already set up is much better:                                                               
-                                                                                                                 
-  - Memory file — I saved a concise structured summary (~2KB) that I load automatically                          
-  - SESSION_LOG.md — a readable reference (~10KB) you can point me to if needed
-                                                                                                                 
-  These two together give me everything relevant without the noise of the full raw transcript.                   
-                                                                                                                 
-  Just say "let's continue working on the boxes app" and I'll be right here. 
+**Last updated:** 2026-04-25  
+**Session name:** lightbox
+
+## What was done this session
+
+1. **Updated `CLAUDE.md`** — added a full project section below the existing behavioral guidelines. It now covers:
+   - Two deployment modes (Cloudflare vs Docker) and the `api-config.js` seam
+   - Run commands (`npm start`, `docker compose up -d`, `node backup.js`)
+   - Auth pattern, data model, virtual folder design, soft delete
+   - Key files table and live deployment URLs
+
+2. **Discussed session continuity** — concluded that updating this file before closing the terminal is the best way to resume context.
+
+## Current project state
+
+Everything is working and deployed. No bugs in flight. No partially-implemented features.
+
+- **Cloudflare (primary):** https://boxes.1000600.xyz
+- **Docker/VPS:** http://194.195.253.94
+
+All features as of this session are complete (virtual folders, trash/restore, image lightbox with prev/next, QR labels, search index, per-file metadata, etc.).
+
+## Nothing pending
+
+No next steps were queued. This session was purely maintenance (CLAUDE.md update).
+
+## How to resume
+
+Start a new Claude Code session in this repo and say:
+
+> "Read gobacktoWhereLeftOff.md and let's continue working on the boxes app."
+
+Claude will also auto-load memory from `.claude/projects/.../memory/` which has full architecture and feature context.
