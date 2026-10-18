@@ -128,6 +128,7 @@ Single-level only, enforced client-side. A folder is just an R2 key prefix: `box
 |---|---|
 | `index.html` | Home page — box grid, search, admin (add/delete/restore boxes, rebuild index, print labels) |
 | `box/index.html` | Per-box page — file list, upload, preview, notes, folders, trash |
+| `_about/index.html` | About page at `/_about/`: what the app is, how it runs, what to do when it doesn't; linked from the header. Public, so nothing secret in it |
 | `cloudflare_worker.js` | Worker: auth, rate-limiting, R2 file ops, KV search index, redirect lookup |
 | `server.js` | Express equivalent of the Worker for Docker mode |
 | `backup.js` | CLI: download R2 + KV → local `.tar.gz` |

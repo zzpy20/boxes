@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Boxes</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<!-- What this app is and how to keep it running, at boxes.1000600.xyz/_about/. Published with the
+     rest of the site when this repo is pushed to GitHub. The site is public: nothing secret here. -->
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.18);
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6b68;
+    --text-muted: #9b9b97;
+    --green-bg: #EAF3DE;
+    --green-text: #3B6D11;
+    --blue-bg: #E6F1FB;
+    --blue-text: #185FA5;
+    --amber-bg: #FAEEDA;
+    --amber-text: #854F0B;
+    --purple-bg: #EEEDFE;
+    --red-bg: #FCEBEB;
+    --red-text: #A32D2D;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #252523;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.2);
+      --text-primary: #f0efeb;
+      --text-secondary: #a0a09c;
+      --text-muted: #6b6b68;
+      --green-bg: #173404;
+      --green-text: #C0DD97;
+      --blue-bg: #042C53;
+      --blue-text: #B5D4F4;
+      --amber-bg: #412402;
+      --amber-text: #FAC775;
+      --purple-bg: #26215C;
+      --red-bg: #4A1414;
+      --red-text: #F4B4B4;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+    line-height: 1.5;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+
+  .header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 2.5rem; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .site-title { font-size: 24px; font-weight: 600; letter-spacing: -0.3px; }
+  .site-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .back { font-size: 13px; color: var(--text-secondary); text-decoration: none; margin-top: 6px; }
+  .back:hover { color: var(--text-primary); }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 0.75rem;
+  }
+  .divider { height: 0.5px; background: var(--border); margin: 0.5rem 0 2rem; }
+
+  .grid { display: grid; gap: 10px; margin-bottom: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+  .card {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem; text-decoration: none; color: inherit;
+    display: flex; align-items: center; gap: 1rem; transition: border-color 0.15s, transform 0.1s;
+  }
+  .card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+  .card-icon {
+    width: 42px; height: 42px; border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .icon-blue { background: var(--blue-bg); }
+  .icon-purple { background: var(--purple-bg); }
+  .icon-green { background: var(--green-bg); }
+  .card-body { flex: 1; min-width: 0; }
+  .card-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .card-url { font-size: 11px; color: var(--text-muted); font-family: 'SF Mono', 'Fira Code', monospace; margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.45; }
+  .card-arrow { font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+
+  .note { font-size: 13px; color: var(--text-secondary); margin-bottom: 2rem; }
+
+  .panel {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem; margin-bottom: 2rem; font-size: 14px; color: var(--text-secondary);
+  }
+  .panel strong { color: var(--text-primary); font-weight: 600; }
+  .panel ul, .panel ol { padding-left: 1.2rem; }
+  .panel li + li { margin-top: 0.45rem; }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px;
+    background: var(--bg); border: 0.5px solid var(--border); border-radius: 5px; padding: 1px 5px;
+    color: var(--text-primary); overflow-wrap: anywhere;
+  }
+
+  .checks { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .checks th {
+    text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); padding: 0 0.75rem 0.5rem 0;
+  }
+  .checks td { padding: 0.65rem 0.75rem 0.65rem 0; border-top: 0.5px solid var(--border); vertical-align: top; color: var(--text-secondary); }
+  .checks td:first-child { color: var(--text-primary); width: 38%; }
+  .ok { color: var(--green-text) !important; font-weight: 500; }
+
+  @media (max-width: 560px) {
+    .checks, .checks tbody, .checks tr, .checks td { display: block; width: 100% !important; }
+    .checks thead { display: none; }
+    .checks td { border-top: none; padding: 0 0 0.2rem; }
+    .checks tr { border-top: 0.5px solid var(--border); padding: 0.65rem 0; }
+  }
+
+  .footer { margin-top: 3rem; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px; margin-top: 4px;
+    background: var(--border); color: var(--text-secondary);
+  }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .status-pill.good { background: var(--green-bg); color: var(--green-text); }
+  .status-pill.warn { background: var(--amber-bg); color: var(--amber-text); }
+  .status-pill.bad { background: var(--red-bg); color: var(--red-text); }
+  .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div>
+      <div class="site-title">Boxes</div>
+      <div class="site-sub">boxes.1000600.xyz</div>
+    </div>
+    <div class="head-right">
+      <div class="status-pill" id="status"><span class="dot"></span><span id="status-text">Checking…</span></div>
+      <a class="back" href="https://home.1000600.xyz">‹ Alan's Home</a>
+    </div>
+  </div>
+
+  <div class="section-label">Open</div>
+  <div class="grid">
+    <a class="card" href="/">
+      <div class="card-icon icon-green">📦</div>
+      <div class="card-body">
+        <div class="card-name">Boxes</div>
+        <div class="card-url">boxes.1000600.xyz</div>
+        <div class="card-desc">Every storage box, what's in it, photos and files, and search across all of them.</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+  </div>
+  <p class="note">Works from anywhere, no Tailscale needed. The pages are public, but nothing in a box opens without the passphrase.</p>
+
+  <div class="section-label">What it is</div>
+  <div class="panel">
+    <ul>
+      <li>A catalogue of the <strong>numbered storage boxes</strong> in the garage. Each box has a page with its files and photos, a note, tags, a cover picture, a label ID and links.</li>
+      <li><strong>Search</strong> on the home page looks through every box's description, note, tags, file names and captions at once.</li>
+      <li>Deleted files go to <strong>the box's own Trash</strong> first and can be restored from there.</li>
+    </ul>
+  </div>
+
+  <div class="section-label">How it runs</div>
+  <div class="panel">
+    <ul>
+      <li><strong>All on Cloudflare — nothing on the Mac mini.</strong> There's no server to start or keep alive.</li>
+      <li>The <strong>pages</strong> are published from the GitHub repo each time it is pushed.</li>
+      <li>A Cloudflare <strong>Worker</strong> named <code>box-redirect</code> checks the passphrase and hands out files. The files live in an <strong>R2</strong> bucket (<code>boxes-files</code>), one folder per box; the search index lives in <strong>KV</strong>.</li>
+      <li>The passphrase is saved in each browser after the first sign-in, so you only type it once per device.</li>
+    </ul>
+  </div>
+
+  <div class="section-label">Is it running?</div>
+  <div class="panel">
+    <table class="checks">
+      <thead><tr><th>What you see</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td>Green <em>Running</em> at the top of this page, and boxes open with their files</td><td class="ok">All good.</td></tr>
+        <tr><td>It keeps asking for the passphrase, or the top of this page says the saved passphrase no longer works</td><td>The passphrase was changed. It is the <code>BOX_AUTH_TOKEN</code> secret on the <code>box-redirect</code> Worker (Cloudflare dashboard → Workers &amp; Pages → box-redirect → Settings). Cloudflare can't show it again, only replace it — if you've forgotten it, set a new one there.</td></tr>
+        <tr><td>Files won't load and you see <em>rate_limited</em> or <em>too_many_unauthorized</em></td><td>Too many requests, or too many wrong passphrases, from one address. Wait 10 minutes.</td></tr>
+        <tr><td>This page says <em>Not answering</em></td><td>The Worker is down or was removed. Check it in the Cloudflare dashboard; to put it back, deploy <code>cloudflare_worker.js</code> from the project folder as <code>box-redirect</code>, with the R2 bucket bound as <code>BOX_R2</code>, the KV namespace as <code>BOX_KV</code> and the passphrase as <code>BOX_AUTH_TOKEN</code>.</td></tr>
+        <tr><td>No page at all at boxes.1000600.xyz</td><td>The site or the domain is the problem, not your boxes. Check Workers &amp; Pages and the DNS for <code>1000600.xyz</code> in the Cloudflare dashboard.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label">Common tasks</div>
+  <div class="panel">
+    <ul>
+      <li><strong>Add a box:</strong> <strong>Add box</strong> on the home page.</li>
+      <li><strong>Add files or photos:</strong> open the box and upload; folders inside a box are one level deep.</li>
+      <li><strong>Undo a delete:</strong> a deleted file → open the box → <strong>Trash</strong>; a deleted box → <strong>Trash</strong> on the home page. Restore one item or all.</li>
+      <li><strong>Search misses something:</strong> <strong>Rebuild search index</strong> on the home page (shown once signed in).</li>
+      <li><strong>Labels for the boxes:</strong> <strong>Print all labels</strong> on the home page.</li>
+      <li><strong>Back everything up:</strong> on the Mac, in <code>~/Projects/boxes</code>, run <code>node backup.js</code>. It downloads every file and the search index into <code>boxes-backup-YYYY-MM-DD.tar.gz</code> in that folder. It needs the Cloudflare keys in <code>.env</code>.</li>
+    </ul>
+  </div>
+
+  <div class="section-label">Where everything is</div>
+  <div class="panel">
+    <ul>
+      <li><strong>Project folder:</strong> <code>~/Projects/boxes</code> on the Mac — <code>CLAUDE.md</code> explains how it fits together.</li>
+      <li><strong>Code:</strong> <code>github.com/zzpy20/boxes</code> (public — never put passwords in it).</li>
+      <li><strong>On Cloudflare:</strong> the Worker <code>box-redirect</code>, the R2 bucket <code>boxes-files</code>, the KV namespace bound as <code>BOX_KV</code>, and the site itself.</li>
+      <li><strong>Secrets:</strong> the passphrase lives only in the Worker; the keys for <code>backup.js</code> live in <code>.env</code> on the Mac, not on GitHub.</li>
+      <li><strong>Without Cloudflare:</strong> the same pages can run on any server with Docker (<code>server.js</code>, <code>docker-compose.yml</code>, <code>setup.sh</code>), storing files on that server's disk instead.</li>
+    </ul>
+  </div>
+
+  <div class="footer">Public page · no passwords here · updated 18 Oct 2026</div>
+
+</div>
+<script>
+// Ask the Worker directly. With the passphrase this browser saved when signing in to Boxes, the check
+// also confirms the passphrase; without one, any answer from the Worker shows it is running.
+(async () => {
+  const pill = document.getElementById('status'), text = document.getElementById('status-text');
+  const show = (cls, msg) => { pill.className = 'status-pill ' + cls; text.textContent = msg; };
+  let token = '';
+  try { token = localStorage.getItem('boxes_auth_token') || ''; } catch (e) {}
+  try {
+    const r = await fetch('https://box-redirect.ausz.workers.dev/ping?check=1' + (token ? '&t=' + encodeURIComponent(token) : ''),
+                          {cache: 'no-store', signal: AbortSignal.timeout(8000)});
+    if (r.status === 200) show('good', 'Running · signed in here');
+    else if (r.status === 401 && token) show('warn', 'Running · saved passphrase no longer works');
+    else if (r.status === 401) show('good', 'Running');
+    else if (r.status === 429) show('warn', 'Running · rate-limited, try in 10 min');
+    else show('bad', 'Not answering');
+  } catch (e) { show('bad', 'Not answering'); }
+})();
+</script>
+</body>
+</html>
